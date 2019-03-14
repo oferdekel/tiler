@@ -7,6 +7,8 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
+#include <iostream>
+
 namespace tiler
 {
     enum class MatrixOrder { rowMajor, columnMajor };
@@ -14,17 +16,20 @@ namespace tiler
     class Matrix
     {
     public:
-        Matrix(float* data, size_t numRows, size_t numColumns, size_t leadingDimensionSize, MatrixOrder order) {}
+        Matrix(float* data, size_t numRows, size_t numColumns, size_t leadingDimensionSize, MatrixOrder order);
 
         size_t NumRows() const { return _numRows; }
         size_t NumColumns() const { return _numColumns; }
         size_t GetLeadingDimensionSize() const { return _leadingDimensionSize; }
         MatrixOrder GetOrder() const { return _order; }
 
-        float* GetPointerTo(int row, int column) {}
-        const float* GetPointerTo(int row, int column) const {}
+        float* GetPointer(int i, int j);
+        const float* GetPointer(int i, int j) const;
 
-        
+        float& operator()(int i, int j) { return *GetPointer(i, j); }
+        float operator()(int i, int j) const { return *GetPointer(i, j); }
+
+        void Print(std::ostream& stream) const;
 
     private:
         float* _data;
@@ -33,4 +38,6 @@ namespace tiler
         size_t _leadingDimensionSize;
         MatrixOrder _order;
     };
+
+    std::ostream& operator<<(std::ostream& stream, const Matrix& matrix);
 }
