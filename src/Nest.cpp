@@ -10,69 +10,74 @@
 #include "IndentedOutputStream.h"
 
 #include <ctime>
+#include <algorithm>
 
 namespace tiler
 {
-    // initialize the random number generator for Variables
-    std::default_random_engine Variable::_generator((int)std::time(0));
+    // initialize the variable counter
+    int Variable::_counter = 0;
 
-    Variable::Variable()
-    {
-        std::uniform_int_distribution<long> uniform;
-        _uid = uniform(_generator);
-    }
+    Variable::Variable() : _id(_counter++)
+    {}
 
     bool Variable::operator==(const Variable& other)
     {
-        return _uid == other._uid;
+        return _id == other._id;
     }
 
-    NestElement::NestElement(Variable variable, double order) : _variable(variable), _order(order) 
+    std::ostream& operator<<(std::ostream& stream, const Variable& variable)
+    {
+        stream << 'v' << variable.GetID();
+        return stream;
+    }
+
+    NestDeclaration::NestDeclaration(Variable variable) : _variable(variable)
     {}
 
-    Variable NestElement::GetVariable() const 
+    Variable NestDeclaration::GetVariable() const 
     { 
         return _variable; 
     }
 
-    void NestElement::SetOrder(double order) 
+    void NestDeclaration::SetPosition(double Position) 
     { 
-        _order = order; 
+        _position = Position; 
     }
 
-    double NestElement::GetOrder() const 
+    double NestDeclaration::GetPosition() const 
     { 
-        return _order; 
+        return _position; 
     }
 
-    LoopElement::LoopElement(Variable index, int start, int stop, int step, double order) : NestElement(index, order), _start(start), _stop(stop), _step(step) 
+    LoopDeclaration::LoopDeclaration(Variable index, int start, int stop, int step) : NestDeclaration(index), _start(start), _stop(stop), _step(step) 
     {}
 
-    void Nest::AddElement(std::shared_ptr<NestElement> nestElement)
+    void Nest::AddDeclaration(Nest::NestDeclarationPtr nestDeclaration)
     {
-        if(IsDefined(nestElement->GetVariable()))
+        if(IsDeclared(nestDeclaration->GetVariable()))
         {
             throw std::logic_error("variable defined in previous element");
         }
 
-        _elements.push_back(nestElement);
+        nestDeclaration->SetPosition(Size());
+        _declarations.push_back(nestDeclaration);
     }
 
     int Nest::Size() const 
     { 
-        return (int)_elements.size(); 
+        return (int)_declarations.size(); 
     }
 
-    NestElement& Nest::Back() 
+    NestDeclaration& Nest::Back() 
     { 
-        return *(_elements.back()); 
+        return *(_declarations.back()); 
     }
 
-    bool Nest::IsDefined(Variable variable) const
+    bool Nest::IsDeclared(Variable variable) const
     {
-        for(const auto& element : _elements)
+        for(const auto& declaration : _declarations)
         {
-            if(element->GetVariable() == variable)
+            if(declaration->GetVariable() == variable)
             {
                 return true;
             }
@@ -80,19 +85,30 @@ namespace tiler
         return false;
     }
 
-    NestMutator::NestMutator(std::shared_ptr<Nest> nest) : _nest(nest) 
-    {}
-
-    NestMutator NestMutator::Order(double order) 
-    { 
-        _nest->Back().SetOrder(order); return NestMutator(_nest); 
+    void Nest::Print(std::ostream& stream) const
+    {
+        std::vector<NestDeclarationPtr> copy(_declarations);
+        std::sort(copy.begin(), copy.end(), [](const NestDeclarationPtr& a, const NestDeclarationPtr& b) { return a->GetPosition() < b->GetPosition();});
     }
 
-    int NestMutator::NestSize() const 
+    NestDeclarer::NestDeclarer(std::shared_ptr<Nest> nest) : _nest(nest) 
+    {}
+
+    NestDeclarer NestDeclarer::Position(double Position) 
+    { 
+        _nest->Back().SetPosition(Position); return NestDeclarer(_nest); 
+    }
+
+    int NestDeclarer::NestSize() const 
     { 
         return _nest->Size(); 
     }
 
-    LoopMutator::LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopElement> loop) : NestMutator(nest), _loop(loop) 
+    void NestDeclarer::Print(std::ostream& stream) const
+    { 
+        return _nest->Print(stream); 
+    }
+
+    LoopMutator::LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopDeclaration> loop) : NestDeclarer(nest), _loop(loop) 
     {}
 }

@@ -9,9 +9,8 @@
 
 #include <iostream>
 #include <memory>
-#include <random>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 namespace tiler
 {
@@ -25,33 +24,39 @@ namespace tiler
         // equality to another variable 
         bool operator==(const Variable& other);
 
+        // returns the ID of the variable
+        int GetID() const { return _id; }
+
     protected:
-        static std::default_random_engine _generator;
-        long _uid;
+        static int _counter;
+        int _id;
     };
 
+    // Outputs the name of a variable to a stream
+    std::ostream& operator<<(std::ostream& stream, const Variable& variable);
+
     // Generic element of a nest
-    class NestElement
+    class NestDeclaration
     {
     public:
-        NestElement(Variable variable, double order);
-        virtual ~NestElement() = default;
+        NestDeclaration(Variable variable);
+        virtual ~NestDeclaration() = default;
 
         Variable GetVariable() const;
 
-        void SetOrder(double order);
+        void SetPosition(double position);
 
-        double GetOrder() const;
+        double GetPosition() const;
 
     private:
-        double _order;
+        double _position = 0;
         Variable _variable; 
     };
 
-    class LoopElement : public NestElement
+    class LoopDeclaration : public NestDeclaration
     {
     public:
-        LoopElement(Variable index, int start, int stop, int step, double order);
+        LoopDeclaration(Variable index, int start, int stop, int step);
 
     private:
         int _start;
@@ -63,45 +68,51 @@ namespace tiler
     class Nest
     {
     public:
+        using NestDeclarationPtr = std::shared_ptr<NestDeclaration>;
+
         // Adds an element to the nest
-        void AddElement(std::shared_ptr<NestElement> nestElement);
+        void AddDeclaration(NestDeclarationPtr NestDeclaration);
 
         // Returns the numer of elements defined in the nest
         int Size() const;
 
         // Returns a reference to the last element in the nest
-        NestElement& Back();
+        NestDeclaration& Back();
 
         // Checks if a variable was previously defined in the nest
-        bool IsDefined(Variable variable) const;
+        bool IsDeclared(Variable variable) const;
+
+        // Prints the nest
+        void Print(std::ostream& stream) const;
 
     private:
-        std::vector<std::shared_ptr<NestElement>> _elements;
+        std::vector<NestDeclarationPtr> _declarations;
     };
 
-    
-    class NestMutator
+    class NestDeclarer
     {
     public:
-        NestMutator(std::shared_ptr<Nest> nest);
+        NestDeclarer(std::shared_ptr<Nest> nest);
 
         inline auto ForAll(Variable index, int start, int stop, int step);
 
-        NestMutator Order(double order);
+        NestDeclarer Position(double Position);
 
         int NestSize() const;
+
+        void Print(std::ostream& stream) const;
 
     protected:
         std::shared_ptr<Nest> _nest;
     };
 
-    class LoopMutator : public NestMutator
+    class LoopMutator : public NestDeclarer
     {
     public:
-        LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopElement> loop);
+        LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopDeclaration> loop);
 
     private:
-        std::shared_ptr<LoopElement> _loop;
+        std::shared_ptr<LoopDeclaration> _loop;
     };
 
     template <typename... T> 
@@ -111,10 +122,10 @@ namespace tiler
     //
     //
 
-    inline auto NestMutator::ForAll(Variable index, int start, int stop, int step)
+    inline auto NestDeclarer::ForAll(Variable index, int start, int stop, int step)
     {
-        auto loop = std::make_shared<LoopElement>(index, start, stop, step, 0.0);
-        _nest->AddElement(loop);
+        auto loop = std::make_shared<LoopDeclaration>(index, start, stop, step);
+        _nest->AddDeclaration(loop);
         return LoopMutator(_nest, loop);
     }
 
@@ -122,7 +133,7 @@ namespace tiler
     LoopMutator ForAll(T... t)
     {
         auto nest = std::make_shared<Nest>();
-        NestMutator nestMutator(nest);
-        return nestMutator.ForAll(t...);
+        NestDeclarer NestDeclarer(nest);
+        return NestDeclarer.ForAll(t...);
     }
 }

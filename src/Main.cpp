@@ -17,14 +17,14 @@ using namespace tiler;
 
 int main(int argc, char** argv)
 {
-
     Variable i, j, k;
 
-    std::cout << 
+    std::cout << i << " " << j << " " << k << std::endl;
+
     ForAll(i, 0, 10, 1)
-        .ForAll(j, 0, 10, 1)        .Order(12)
+        .ForAll(j, 0, 10, 1)        .Position(12)
             .ForAll(k, 0, 10, 1)
-                .NestSize();
+                .Print(std::cout);
 
     return 0;
 }
