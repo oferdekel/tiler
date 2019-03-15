@@ -5,11 +5,13 @@ set(target_name tiler)
 
 # files
 set(include
+    include/ForAll.h
     include/IndentedOutputStream.h
     include/Matrix.h
 )
 
 set(src
+    src/ForAll.cpp
     src/Main.cpp
     src/Matrix.cpp
     src/IndentedOutputStream.cpp

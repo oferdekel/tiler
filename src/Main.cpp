@@ -6,7 +6,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "IndentedOutputStream.h"
+#include "ForAll.h"
 #include "Matrix.h"
 
 #include <iostream>
@@ -18,22 +18,13 @@ using namespace tiler;
 int main(int argc, char** argv)
 {
 
-    IndentedOutputStream printer(std::cout);
-    printer << 3 << "x" << endl;
-    printer.IncreaseIndent();
-    printer << "ddddd" << 3 << "x" << endl;
-    printer << 300 << "x" << endl;
-    printer.IncreaseIndent();
-    printer << "ddddd" << 3 << "x" << endl;
-    printer << 300 << "x" << endl;
-    printer.DecreaseIndent();
-    printer << "ddddd" << 3 << "x" << endl;
-    printer << 300 << "x" << endl;
-    
+    Index i, j, k;
 
-    float v[6] = {1, 2, 3, 4, 5, 6};
-    Matrix M(v, 2, 3, 3, MatrixOrder::rowMajor);
-    std::cout << M;
+    ForAll(i, 0, 10, 1)
+        .ForAll(j, 0, 10, 1).Order(-1)
+            .ForAll(k, 0, 10, 1)
+                .Print(std::cout);
+
 
     return 0;
 }

@@ -16,28 +16,33 @@ namespace tiler
     class Matrix
     {
     public:
-        Matrix(float* data, size_t numRows, size_t numColumns, size_t leadingDimensionSize, MatrixOrder order);
+        // Constructs a matrix
+        Matrix(float* data, int numRows, int numColumns, MatrixOrder order, int leadingDimensionSize);
+        Matrix(float* data, int numRows, int numColumns, MatrixOrder order);
 
-        size_t NumRows() const { return _numRows; }
-        size_t NumColumns() const { return _numColumns; }
-        size_t GetLeadingDimensionSize() const { return _leadingDimensionSize; }
+        // Access matrix dimensions and info
+        int NumRows() const { return _numRows; }
+        int NumColumns() const { return _numColumns; }
+        int GetLeadingDimensionSize() const { return _leadingDimensionSize; }
         MatrixOrder GetOrder() const { return _order; }
 
+        // Access matrix elements and their memory positions
+        float& operator()(int i, int j) { return *GetPointer(i, j); }
+        float operator()(int i, int j) const { return *GetPointer(i, j); }
         float* GetPointer(int i, int j);
         const float* GetPointer(int i, int j) const;
 
-        float& operator()(int i, int j) { return *GetPointer(i, j); }
-        float operator()(int i, int j) const { return *GetPointer(i, j); }
-
+        // Print a matrix to an output stream
         void Print(std::ostream& stream) const;
 
     private:
         float* _data;
-        size_t _numRows;
-        size_t _numColumns;
-        size_t _leadingDimensionSize;
+        int _numRows;
+        int _numColumns;
+        int _leadingDimensionSize;
         MatrixOrder _order;
     };
 
+    // Print a matrix to an output stream
     std::ostream& operator<<(std::ostream& stream, const Matrix& matrix);
 }

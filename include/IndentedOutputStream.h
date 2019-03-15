@@ -9,6 +9,7 @@
 
 #include <memory>
 #include <ostream>
+#include <string>
 
 namespace tiler
 {
@@ -35,7 +36,7 @@ namespace tiler
         IndentedOutputStream& operator<<(T&& value);
 
         // Returns the current level of indentation 
-        size_t GetIndent() { return _indent; }
+        int GetIndent() { return _indent; }
 
         // Increased the level of indentation
         void IncreaseIndent() { ++_indent; }
@@ -45,7 +46,7 @@ namespace tiler
 
     private:
         std::reference_wrapper<std::ostream> _stream;
-        size_t _indent = 0;
+        int _indent = 0;
         bool _lineBeginning = true;
     };
 

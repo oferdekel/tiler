@@ -12,9 +12,20 @@
 
 namespace  tiler
 {
-    Matrix::Matrix(float* data, size_t numRows, size_t numColumns, size_t leadingDimensionSize, MatrixOrder order) : _data(data), _numRows(numRows), _numColumns(numColumns), _leadingDimensionSize(leadingDimensionSize), _order(order)
+    Matrix::Matrix(float* data, int numRows, int numColumns, MatrixOrder order, int leadingDimensionSize) : _data(data), _numRows(numRows), _numColumns(numColumns), _order(order), _leadingDimensionSize(leadingDimensionSize)
     {}
 
+    Matrix::Matrix(float* data, int numRows, int numColumns, MatrixOrder order) : _data(data), _numRows(numRows), _numColumns(numColumns), _order(order)
+    {
+        if(_order == MatrixOrder::rowMajor)
+        {
+            _leadingDimensionSize = _numColumns;
+        }
+        else
+        {
+            _leadingDimensionSize = _numRows;
+        }
+    }
 
     float* Matrix::GetPointer(int i, int j) 
     {
