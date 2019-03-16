@@ -16,7 +16,7 @@ namespace tiler
     Variable::Variable() : _id(_counter++)
     {}
 
-    bool Variable::operator==(const Variable& other)
+    bool Variable::operator==(const Variable& other) const
     {
         return _id == other._id;
     }

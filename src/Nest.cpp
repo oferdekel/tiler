@@ -10,6 +10,7 @@
 #include "IndentedOutputStream.h"
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace tiler
 {
@@ -58,11 +59,6 @@ namespace tiler
 
     void Nest::AddDeclaration(Nest::NestDeclarationPtr nestDeclaration)
     {
-        if(IsDeclared(nestDeclaration->GetDeclaredVariable()))
-        {
-            throw std::logic_error("variable defined in previous element");
-        }
-
         nestDeclaration->SetPosition(Size());
         _declarations.push_back(nestDeclaration);
     }
@@ -94,9 +90,9 @@ namespace tiler
         IndentedOutputStream indentedStream(stream);
 
         // sort the declaratins based on the order
-        std::vector<NestDeclarationPtr> copy(_declarations);
-        std::sort(copy.begin(), copy.end(), [](const NestDeclarationPtr& a, const NestDeclarationPtr& b) { return a->GetPosition() < b->GetPosition();});
-
+        auto copy = GetSortedDeclarationsCopy();
+        VerifyDeclarationPositions(copy);
+        
         for(const auto& declaration : copy)
         {
             auto loopDeclaration = std::dynamic_pointer_cast<LoopDeclaration>(declaration);
@@ -117,6 +113,47 @@ namespace tiler
                 indentedStream.DecreaseIndent();
                 indentedStream << "}" << endl;
             }
+        }
+    }
+
+    std::vector<Nest::NestDeclarationPtr> Nest::GetSortedDeclarationsCopy() const
+    {
+        std::vector<NestDeclarationPtr> copy(_declarations);
+        std::sort(copy.begin(), copy.end(), [](const NestDeclarationPtr& a, const NestDeclarationPtr& b) { return a->GetPosition() < b->GetPosition();});
+        return copy;
+    }
+
+    void Nest::VerifyDeclarationPositions(std::vector<Nest::NestDeclarationPtr> sortedDeclarations) const
+    {
+        std::unordered_set<Variable> definedVariables;
+        for(const auto& declaration : sortedDeclarations)
+        {
+            auto variable = declaration->GetDeclaredVariable();
+            if(definedVariables.find(variable) != definedVariables.end())
+            {
+                throw std::logic_error("variable " + std::to_string(variable.GetID()) + " multiply defined");
+            }
+
+            auto tileDeclaration = std::dynamic_pointer_cast<TileDeclaration>(declaration);
+            if(tileDeclaration != nullptr)
+            {
+                if(definedVariables.find(tileDeclaration->GetMatrixVariable()) == definedVariables.end())
+                {
+                    throw std::logic_error("tile variable " + std::to_string(variable.GetID()) + " requires previous declaration of matrix variable " + std::to_string(tileDeclaration->GetMatrixVariable().GetID()));
+                }
+
+                if(definedVariables.find(tileDeclaration->GetTopVariable()) == definedVariables.end())
+                {
+                    throw std::logic_error("tile variable " + std::to_string(variable.GetID()) + " requires previous declaration of top variable " + std::to_string(tileDeclaration->GetTopVariable().GetID()));
+                }
+
+                if(definedVariables.find(tileDeclaration->GetLeftVariable()) == definedVariables.end())
+                {
+                    throw std::logic_error("tile variable " + std::to_string(variable.GetID()) + " requires previous declaration of left variable " + std::to_string(tileDeclaration->GetLeftVariable().GetID()));
+                }
+            }
+
+            definedVariables.insert(variable);
         }
     }
 

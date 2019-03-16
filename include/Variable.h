@@ -8,6 +8,7 @@
 #pragma once
 
 #include <iostream>
+#include <unordered_set>
 
 namespace tiler
 {
@@ -19,7 +20,7 @@ namespace tiler
         Variable();
 
         // equality to another variable 
-        bool operator==(const Variable& other);
+        bool operator==(const Variable& other) const;
 
         // returns the ID of the variable
         int GetID() const { return _id; }
@@ -31,4 +32,15 @@ namespace tiler
 
     // Outputs the name of a variable to a stream
     std::ostream& operator<<(std::ostream& stream, const Variable& variable);
+}
+
+namespace std {
+    template<>
+    struct hash<tiler::Variable>
+    {
+        std::size_t operator()(const tiler::Variable& variable) const noexcept
+        {
+            return variable.GetID();
+        }
+    };
 }

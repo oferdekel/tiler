@@ -97,6 +97,10 @@ namespace tiler
         void Print(std::ostream& stream) const;
 
     private:
+
+        std::vector<NestDeclarationPtr> GetSortedDeclarationsCopy() const;
+        void VerifyDeclarationPositions(std::vector<NestDeclarationPtr> sortedDeclarations) const;
+
         std::vector<NestDeclarationPtr> _declarations;
     };
 
