@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Project:  tiler
-//  File:     ForAll.cpp
+//  File:     Nest.cpp
 //  Authors:  Ofer Dekel
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -9,28 +9,10 @@
 #include "Nest.h"
 #include "IndentedOutputStream.h"
 
-#include <ctime>
 #include <algorithm>
 
 namespace tiler
 {
-    // initialize the variable counter
-    int Variable::_counter = 0;
-
-    Variable::Variable() : _id(_counter++)
-    {}
-
-    bool Variable::operator==(const Variable& other)
-    {
-        return _id == other._id;
-    }
-
-    std::ostream& operator<<(std::ostream& stream, const Variable& variable)
-    {
-        stream << 'v' << variable.GetID();
-        return stream;
-    }
-
     NestDeclaration::NestDeclaration(Variable declaredVariable) : _declaredVariable(declaredVariable)
     {}
 
