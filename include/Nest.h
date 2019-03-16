@@ -56,7 +56,7 @@ namespace tiler
     class LoopDeclaration : public NestDeclaration
     {
     public:
-        LoopDeclaration(Variable index, int start, int stop, int step);
+        LoopDeclaration(Variable indexVariable, int start, int stop, int step);
 
         int GetStart() const { return _start; }
         int GetStop() const { return _stop; }
@@ -75,24 +75,24 @@ namespace tiler
     class TileDeclaration : public NestDeclaration
     {
     public:
-        TileDeclaration(Variable tileVariable, Variable matrix, Variable top, Variable left, int height, int width);
+        TileDeclaration(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width);
 
-        Variable GetMatrix() const { return _matrix; }
-        Variable GetTop() const { return _top; }
-        Variable GetLeft() const { return _left; }
+        Variable GetMatrixVariable() const { return _matrixVariable; }
+        Variable GetTopVariable() const { return _topVariable; }
+        Variable GetLeftVariable() const { return _leftVariable; }
         int GetHeight() const { return _height; }
         int GetWidth() const { return _width; }        
 
     private:
-        Variable _matrix;
-        Variable _top;
-        Variable _left;
+        Variable _matrixVariable;
+        Variable _topVariable;
+        Variable _leftVariable;
         int _height;
         int _width;
     };
 
     // Prints a tile declaration to a stream
-    std::ostream& operator<<(std::ostream& stream, const TileDeclaration& loopDeclaration);
+    std::ostream& operator<<(std::ostream& stream, const TileDeclaration& tileDeclaration);
 
     // Datastructure that stores the variables that make up the nested loop
     class Nest
@@ -124,11 +124,11 @@ namespace tiler
     public:
         NestDeclarer(std::shared_ptr<Nest> nest);
 
-        NestDeclarer Using(Variable matrix);
+        NestDeclarer Using(Variable matrixVariable);
 
-        inline auto ForAll(Variable index, int start, int stop, int step);
+        inline auto ForAll(Variable indexVariable, int start, int stop, int step);
 
-        inline auto Tile(Variable tileVariable, Variable matrix, Variable top, Variable left, int height, int width);
+        inline auto Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width);
 
         NestDeclarer Position(double Position);
 
@@ -162,16 +162,16 @@ namespace tiler
     //
     //
 
-    inline auto NestDeclarer::ForAll(Variable index, int start, int stop, int step)
+    inline auto NestDeclarer::ForAll(Variable indexVariable, int start, int stop, int step)
     {
-        auto loop = std::make_shared<LoopDeclaration>(index, start, stop, step);
+        auto loop = std::make_shared<LoopDeclaration>(indexVariable, start, stop, step);
         _nest->AddDeclaration(loop);
         return LoopMutator(_nest, loop);
     }
 
-    inline auto NestDeclarer::Tile(Variable tileVariable, Variable matrix, Variable top, Variable left, int height, int width)
+    inline auto NestDeclarer::Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width)
     {
-        auto tile = std::make_shared<TileDeclaration>(tileVariable, matrix, top, left, height, width);
+        auto tile = std::make_shared<TileDeclaration>(tileVariable, matrixVariable, topVariable, leftVariable, height, width);
         _nest->AddDeclaration(tile);
         return TileMutator(_nest, tile);
     }

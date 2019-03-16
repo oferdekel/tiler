@@ -49,7 +49,7 @@ namespace tiler
         return _position; 
     }
 
-    LoopDeclaration::LoopDeclaration(Variable index, int start, int stop, int step) : NestDeclaration(index), _start(start), _stop(stop), _step(step) 
+    LoopDeclaration::LoopDeclaration(Variable indexVariable, int start, int stop, int step) : NestDeclaration(indexVariable), _start(start), _stop(stop), _step(step) 
     {}
 
     std::ostream& operator<<(std::ostream& stream, const LoopDeclaration& loopDeclaration)
@@ -70,8 +70,8 @@ namespace tiler
         return stream;
     }
 
-    TileDeclaration::TileDeclaration(Variable tileVariable, Variable matrix, Variable top, Variable left, int height, int width) 
-        : NestDeclaration(tileVariable), _matrix(matrix), _top(top), _left(left), _height(height), _width(width) 
+    TileDeclaration::TileDeclaration(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width) 
+        : NestDeclaration(tileVariable), _matrixVariable(matrixVariable), _topVariable(topVariable), _leftVariable(leftVariable), _height(height), _width(width) 
     {}
 
     void Nest::AddDeclaration(Nest::NestDeclarationPtr nestDeclaration)
@@ -141,9 +141,9 @@ namespace tiler
     NestDeclarer::NestDeclarer(std::shared_ptr<Nest> nest) : _nest(nest) 
     {}
 
-    NestDeclarer NestDeclarer::Using(Variable matrix)
+    NestDeclarer NestDeclarer::Using(Variable matrixVariable)
     {
-        auto declaration = std::make_shared<NestDeclaration>(matrix);
+        auto declaration = std::make_shared<NestDeclaration>(matrixVariable);
         _nest->AddDeclaration(declaration);
         return NestDeclarer(_nest);
     }
