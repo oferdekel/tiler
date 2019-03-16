@@ -31,12 +31,12 @@ namespace tiler
         return stream;
     }
 
-    NestDeclaration::NestDeclaration(Variable variable) : _variable(variable)
+    NestDeclaration::NestDeclaration(Variable declaredVariable) : _declaredVariable(declaredVariable)
     {}
 
-    Variable NestDeclaration::GetVariable() const 
+    Variable NestDeclaration::GetDeclaredVariable() const 
     { 
-        return _variable; 
+        return _declaredVariable; 
     }
 
     void NestDeclaration::SetPosition(double Position) 
@@ -52,9 +52,31 @@ namespace tiler
     LoopDeclaration::LoopDeclaration(Variable index, int start, int stop, int step) : NestDeclaration(index), _start(start), _stop(stop), _step(step) 
     {}
 
+    std::ostream& operator<<(std::ostream& stream, const LoopDeclaration& loopDeclaration)
+    {
+        stream << "for(int " 
+            << loopDeclaration.GetDeclaredVariable() 
+            << " = " 
+            << loopDeclaration.GetStart() 
+            << "; " 
+            << loopDeclaration.GetDeclaredVariable() 
+            << " < " 
+            << loopDeclaration.GetStop()
+            << "; "
+            << loopDeclaration.GetDeclaredVariable()
+            << " += "
+            << loopDeclaration.GetStep()
+            << ")";
+        return stream;
+    }
+
+    TileDeclaration::TileDeclaration(Variable tileVariable, Variable matrix, Variable top, Variable left, int height, int width) 
+        : NestDeclaration(tileVariable), _matrix(matrix), _top(top), _left(left), _height(height), _width(width) 
+    {}
+
     void Nest::AddDeclaration(Nest::NestDeclarationPtr nestDeclaration)
     {
-        if(IsDeclared(nestDeclaration->GetVariable()))
+        if(IsDeclared(nestDeclaration->GetDeclaredVariable()))
         {
             throw std::logic_error("variable defined in previous element");
         }
@@ -73,29 +95,11 @@ namespace tiler
         return *(_declarations.back()); 
     }
 
-    std::ostream& operator<<(std::ostream& stream, const LoopDeclaration& loopDeclaration)
-    {
-        stream << "for(int " 
-            << loopDeclaration.GetVariable() 
-            << " = " 
-            << loopDeclaration.GetStart() 
-            << "; " 
-            << loopDeclaration.GetVariable() 
-            << " < " 
-            << loopDeclaration.GetStop()
-            << "; "
-            << loopDeclaration.GetVariable()
-            << " += "
-            << loopDeclaration.GetStep()
-            << ")";
-        return stream;
-    }
-
     bool Nest::IsDeclared(Variable variable) const
     {
         for(const auto& declaration : _declarations)
         {
-            if(declaration->GetVariable() == variable)
+            if(declaration->GetDeclaredVariable() == variable)
             {
                 return true;
             }
@@ -161,4 +165,8 @@ namespace tiler
 
     LoopMutator::LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopDeclaration> loop) : NestDeclarer(nest), _loop(loop) 
     {}
+
+    TileMutator::TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileDeclaration> tile) : NestDeclarer(nest), _tile(tile) 
+    {}
+
 }
