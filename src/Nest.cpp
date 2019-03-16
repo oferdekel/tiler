@@ -57,6 +57,24 @@ namespace tiler
         : NestDeclaration(tileVariable), _matrixVariable(matrixVariable), _topVariable(topVariable), _leftVariable(leftVariable), _height(height), _width(width) 
     {}
 
+    std::ostream& operator<<(std::ostream& stream, const TileDeclaration& tileDeclaration)
+    {
+        stream << "float* "
+            << tileDeclaration.GetDeclaredVariable()
+            << " = Tile("
+            << tileDeclaration.GetMatrixVariable()
+            << ", "
+            << tileDeclaration.GetTopVariable()
+            << ", "
+            << tileDeclaration.GetLeftVariable()
+            << ", "
+            << tileDeclaration.GetHeight()
+            << ", "
+            << tileDeclaration.GetWidth()
+            <<");";
+        return stream;
+    }
+
     void Nest::AddDeclaration(Nest::NestDeclarationPtr nestDeclaration)
     {
         nestDeclaration->SetPosition(Size());
@@ -98,9 +116,15 @@ namespace tiler
             auto loopDeclaration = std::dynamic_pointer_cast<LoopDeclaration>(declaration);
             if(loopDeclaration != nullptr)
             {
-                indentedStream << *loopDeclaration << endl;
-                indentedStream << "{" << endl;
+                indentedStream << *loopDeclaration;
+                indentedStream << " {" << endl;
                 indentedStream.IncreaseIndent();
+            }
+
+            auto tileDeclaration = std::dynamic_pointer_cast<TileDeclaration>(declaration);
+            if(tileDeclaration != nullptr)
+            {
+                indentedStream << *tileDeclaration << endl;
             }
         }
 
