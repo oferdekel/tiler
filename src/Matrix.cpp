@@ -9,6 +9,7 @@
 #include "Matrix.h"
 
 #include <iomanip>
+#include <stdexcept>
 
 namespace  tiler
 {
@@ -72,10 +73,48 @@ namespace  tiler
         stream << " }\n";
     }
 
+    void Matrix::PrintData(std::ostream& stream) const
+    {
+        stream << "{" << std::setw(5) << setiosflags(std::ios::fixed) << std::setprecision(2) << _data[0];
+        for(int i=1; i<_numRows * _numColumns; ++i)
+        {
+            stream << ", " << std::setw(5) << setiosflags(std::ios::fixed) << std::setprecision(2) << _data[i];
+        }
+        stream << " }";
+    }
+
     std::ostream& operator<<(std::ostream& stream, const Matrix& matrix)
     {
         matrix.Print(stream);
         return stream;
     }
 
+    std::vector<float> MatrixToVector(MatrixOrder order, std::initializer_list<std::initializer_list<float>> list)
+    {
+        int numRows = (int)list.size();
+        int numColumns = (int)(list.begin()->size());
+
+        std::vector<float> v(numRows * numColumns);
+        Matrix M(v.data(), numRows, numColumns, order);
+
+        int i = 0;
+        for (auto rowIter = list.begin(); rowIter < list.end(); ++rowIter)
+        {
+            // verify initializer list size
+            if(rowIter->size() != numColumns)
+            {
+                throw std::logic_error("incorrect number of elements in matrix initializer list");
+            }
+
+            int j = 0;
+            for (auto elementIter = rowIter->begin(); elementIter < rowIter->end(); ++elementIter)
+            {
+                M(i, j) = *elementIter;
+                ++j;
+            }
+            ++i;
+        }
+
+        return v;
+    }
 } 

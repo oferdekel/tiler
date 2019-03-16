@@ -8,6 +8,7 @@
 #pragma once
 
 #include "Variable.h"
+#include "Matrix.h"
 
 #include <iostream>
 #include <memory>
@@ -17,11 +18,11 @@
 namespace tiler
 {
     // Generic element of a nest
-    class NestDeclaration
+    class NestDeclarationBase
     {
     public:
-        NestDeclaration(Variable declaredVariable);
-        virtual ~NestDeclaration() = default;
+        NestDeclarationBase(Variable declaredVariable);
+        virtual ~NestDeclarationBase() = default;
 
         Variable GetDeclaredVariable() const;
 
@@ -34,7 +35,21 @@ namespace tiler
         Variable _declaredVariable; 
     };
 
-    class LoopDeclaration : public NestDeclaration
+    class UsingDeclaration : public NestDeclarationBase
+    {
+    public:
+        UsingDeclaration(Matrix matrix);
+
+        Matrix GetMatrix() const { return _matrix; } 
+
+    private:
+        Matrix _matrix;
+    };
+
+    // Prints a loop declaration to a stream
+    std::ostream& operator<<(std::ostream& stream, const UsingDeclaration& usingDeclaration);
+
+    class LoopDeclaration : public NestDeclarationBase
     {
     public:
         LoopDeclaration(Variable indexVariable, int start, int stop, int step);
@@ -49,11 +64,10 @@ namespace tiler
         int _step;
     };
 
-
     // Prints a loop declaration to a stream
     std::ostream& operator<<(std::ostream& stream, const LoopDeclaration& loopDeclaration);
 
-    class TileDeclaration : public NestDeclaration
+    class TileDeclaration : public NestDeclarationBase
     {
     public:
         TileDeclaration(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width);
@@ -79,16 +93,16 @@ namespace tiler
     class Nest
     {
     public:
-        using NestDeclarationPtr = std::shared_ptr<NestDeclaration>;
+        using NestDeclarationPtr = std::shared_ptr<NestDeclarationBase>;
 
         // Adds an element to the nest
-        void AddDeclaration(NestDeclarationPtr NestDeclaration);
+        void AddDeclaration(NestDeclarationPtr NestDeclarationBase);
 
         // Returns the numer of elements defined in the nest
         int Size() const;
 
         // Returns a reference to the last element in the nest
-        NestDeclaration& Back();
+        NestDeclarationBase& Back();
 
         // Checks if a variable was previously defined in the nest
         bool IsDeclared(Variable variable) const;
@@ -109,7 +123,7 @@ namespace tiler
     public:
         NestDeclarer(std::shared_ptr<Nest> nest);
 
-        NestDeclarer Using(Variable matrixVariable);
+        NestDeclarer Using(Matrix matrix);
 
         inline auto ForAll(Variable indexVariable, int start, int stop, int step);
 

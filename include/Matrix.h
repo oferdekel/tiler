@@ -7,13 +7,16 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
+#include "Variable.h"
+
 #include <iostream>
+#include <vector>
 
 namespace tiler
 {
     enum class MatrixOrder { rowMajor, columnMajor };
 
-    class Matrix
+    class Matrix : public Variable
     {
     public:
         // Constructs a matrix
@@ -23,6 +26,7 @@ namespace tiler
         // Access matrix dimensions and info
         int NumRows() const { return _numRows; }
         int NumColumns() const { return _numColumns; }
+        int Size() const { return _numRows * _numColumns; }
         int GetLeadingDimensionSize() const { return _leadingDimensionSize; }
         MatrixOrder GetOrder() const { return _order; }
 
@@ -34,6 +38,9 @@ namespace tiler
 
         // Print a matrix to an output stream
         void Print(std::ostream& stream) const;
+        
+        // Print the underlying data as a vector
+        void PrintData(std::ostream& stream) const;
 
     private:
         float* _data;
@@ -45,4 +52,8 @@ namespace tiler
 
     // Print a matrix to an output stream
     std::ostream& operator<<(std::ostream& stream, const Matrix& matrix);
+
+    // Creates a vector of values from matrix-style initializer lists
+    std::vector<float> MatrixToVector(MatrixOrder order, std::initializer_list<std::initializer_list<float>> list);
+
 }
