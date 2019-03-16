@@ -73,6 +73,12 @@ namespace tiler
         return *(_declarations.back()); 
     }
 
+    std::ostream& operator<<(std::ostream& stream, const LoopDeclaration& loopDeclaration)
+    {
+        stream << "for(" << loopDeclaration.GetVariable() << "=";
+        return stream;
+    }
+
     bool Nest::IsDeclared(Variable variable) const
     {
         for(const auto& declaration : _declarations)
@@ -87,8 +93,19 @@ namespace tiler
 
     void Nest::Print(std::ostream& stream) const
     {
+        // sort the declaratins based on the order
         std::vector<NestDeclarationPtr> copy(_declarations);
         std::sort(copy.begin(), copy.end(), [](const NestDeclarationPtr& a, const NestDeclarationPtr& b) { return a->GetPosition() < b->GetPosition();});
+
+        IndentedOutputStream indentedStream(stream);
+        for(const auto& declaration : copy)
+        {
+            auto loopDeclaration = std::dynamic_pointer_cast<LoopDeclaration>(declaration);
+            if(loopDeclaration != nullptr)
+            {
+                indentedStream << *loopDeclaration << endl;
+            }
+        }
     }
 
     NestDeclarer::NestDeclarer(std::shared_ptr<Nest> nest) : _nest(nest) 

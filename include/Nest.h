@@ -64,6 +64,9 @@ namespace tiler
         int _step;
     };
 
+    // Outputs a loop declaration to a stream
+    std::ostream& operator<<(std::ostream& stream, const LoopDeclaration& loopDeclaration);
+
     // Datastructure that stores the variables that make up the nested loop
     class Nest
     {
