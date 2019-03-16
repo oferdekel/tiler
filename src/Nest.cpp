@@ -75,7 +75,19 @@ namespace tiler
 
     std::ostream& operator<<(std::ostream& stream, const LoopDeclaration& loopDeclaration)
     {
-        stream << "for(" << loopDeclaration.GetVariable() << "=";
+        stream << "for(int " 
+            << loopDeclaration.GetVariable() 
+            << " = " 
+            << loopDeclaration.GetStart() 
+            << "; " 
+            << loopDeclaration.GetVariable() 
+            << " < " 
+            << loopDeclaration.GetStop()
+            << "; "
+            << loopDeclaration.GetVariable()
+            << " += "
+            << loopDeclaration.GetStep()
+            << ")";
         return stream;
     }
 
@@ -93,17 +105,31 @@ namespace tiler
 
     void Nest::Print(std::ostream& stream) const
     {
+        IndentedOutputStream indentedStream(stream);
+
         // sort the declaratins based on the order
         std::vector<NestDeclarationPtr> copy(_declarations);
         std::sort(copy.begin(), copy.end(), [](const NestDeclarationPtr& a, const NestDeclarationPtr& b) { return a->GetPosition() < b->GetPosition();});
 
-        IndentedOutputStream indentedStream(stream);
         for(const auto& declaration : copy)
         {
             auto loopDeclaration = std::dynamic_pointer_cast<LoopDeclaration>(declaration);
             if(loopDeclaration != nullptr)
             {
                 indentedStream << *loopDeclaration << endl;
+                indentedStream << "{" << endl;
+                indentedStream.IncreaseIndent();
+            }
+        }
+
+        std::reverse(copy.begin(), copy.end());
+        for(const auto& declaration : copy)
+        {
+            auto loopDeclaration = std::dynamic_pointer_cast<LoopDeclaration>(declaration);
+            if(loopDeclaration != nullptr)
+            {
+                indentedStream.DecreaseIndent();
+                indentedStream << "}" << endl;
             }
         }
     }

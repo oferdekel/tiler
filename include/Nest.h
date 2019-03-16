@@ -58,6 +58,10 @@ namespace tiler
     public:
         LoopDeclaration(Variable index, int start, int stop, int step);
 
+        int GetStart() const { return _start; }
+        int GetStop() const { return _stop; }
+        int GetStep() const { return _step; }
+
     private:
         int _start;
         int _stop;
