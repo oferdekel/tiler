@@ -137,6 +137,13 @@ namespace tiler
     NestDeclarer::NestDeclarer(std::shared_ptr<Nest> nest) : _nest(nest) 
     {}
 
+    NestDeclarer NestDeclarer::Using(Variable matrix)
+    {
+        auto declaration = std::make_shared<NestDeclaration>(matrix);
+        _nest->AddDeclaration(declaration);
+        return NestDeclarer(_nest);
+    }
+
     NestDeclarer NestDeclarer::Position(double Position) 
     { 
         _nest->Back().SetPosition(Position); return NestDeclarer(_nest); 

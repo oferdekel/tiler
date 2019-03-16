@@ -101,6 +101,8 @@ namespace tiler
     public:
         NestDeclarer(std::shared_ptr<Nest> nest);
 
+        NestDeclarer Using(Variable matrix);
+
         inline auto ForAll(Variable index, int start, int stop, int step);
 
         NestDeclarer Position(double Position);
@@ -122,9 +124,6 @@ namespace tiler
         std::shared_ptr<LoopDeclaration> _loop;
     };
 
-    template <typename... T> 
-    LoopMutator ForAll(T... t);
-
     //
     //
     //
@@ -134,6 +133,14 @@ namespace tiler
         auto loop = std::make_shared<LoopDeclaration>(index, start, stop, step);
         _nest->AddDeclaration(loop);
         return LoopMutator(_nest, loop);
+    }
+
+    template <typename... T> 
+    NestDeclarer Using(T... t)
+    {
+        auto nest = std::make_shared<Nest>();
+        NestDeclarer NestDeclarer(nest);
+        return NestDeclarer.Using(t...);
     }
 
     template <typename... T> 
