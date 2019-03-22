@@ -20,10 +20,4 @@ namespace tiler
     {
         return _id == other._id;
     }
-
-    std::ostream& operator<<(std::ostream& stream, const Variable& variable)
-    {
-        stream << 'v' << variable.GetID();
-        return stream;
-    }
 }

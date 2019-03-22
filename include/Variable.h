@@ -8,6 +8,7 @@
 #pragma once
 
 #include <iostream>
+#include <string>
 #include <unordered_set>
 
 namespace tiler
@@ -25,13 +26,13 @@ namespace tiler
         // returns the ID of the variable
         int GetID() const { return _id; }
 
+        // returns the variable name
+        std::string GetName() const { return "v" + std::to_string(_id); }
+
     protected:
         static int _counter;
         int _id;
     };
-
-    // Outputs the name of a variable to a stream
-    std::ostream& operator<<(std::ostream& stream, const Variable& variable);
 }
 
 namespace std {
