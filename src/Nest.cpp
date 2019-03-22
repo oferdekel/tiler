@@ -14,13 +14,11 @@
 
 namespace tiler
 {
-    NestStatementBase::NestStatementBase(Variable declaredVariable) : _declaredVariable(declaredVariable)
-    {}
 
-    Variable NestStatementBase::GetDeclaredVariable() const 
-    { 
-        return _declaredVariable; 
-    }
+    double NestStatementBase::_positionCounter = 0;
+
+    NestStatementBase::NestStatementBase() : _position(_positionCounter++)
+    {}
 
     void NestStatementBase::SetPosition(double Position) 
     { 
@@ -32,76 +30,71 @@ namespace tiler
         return _position; 
     }
 
-    UsingDeclaration::UsingDeclaration(Matrix matrix) : _matrix(matrix)
-    {}
-
-    std::ostream& operator<<(std::ostream& stream, const UsingDeclaration& usingStatement)
+    std::ostream& operator<<(std::ostream& stream, const NestStatementBase& statement)
     {
-        auto matrix = usingStatement.GetMatrix();
-        stream << "float " 
-            << usingStatement.GetMatrix().GetName() 
-            << "["
-            << matrix.Size()
-            << "] = ";
-        matrix.PrintData(stream);
-        stream << ";";
-
+        statement.Print(stream);
         return stream;
     }
 
-    LoopStatement::LoopStatement(Variable indexVariable, int start, int stop, int step) : NestStatementBase(indexVariable), _start(start), _stop(stop), _step(step) 
+    UsingDeclaration::UsingDeclaration(Matrix matrixVariable) : _matrixVariable(matrixVariable)
     {}
 
-    std::ostream& operator<<(std::ostream& stream, const LoopStatement& loopStatement)
+    void UsingDeclaration::Print(std::ostream& stream) const
+    {
+        stream << "float " 
+            << GetMatrix().GetName() 
+            << "["
+            << GetMatrix().Size()
+            << "] = ";
+        GetMatrix().PrintData(stream);
+        stream << ";";
+    }
+
+    LoopStatement::LoopStatement(Variable indexVariable, int start, int stop, int step) : _indexVariable(indexVariable), _start(start), _stop(stop), _step(step) 
+    {}
+
+    void LoopStatement::Print(std::ostream& stream) const
     {
         stream << "for(int " 
-            << loopStatement.GetDeclaredVariable().GetName()
+            << GetStatementVariable().GetName()
             << " = " 
-            << loopStatement.GetStart() 
+            << GetStart() 
             << "; " 
-            << loopStatement.GetDeclaredVariable().GetName()
+            << GetStatementVariable().GetName()
             << " < " 
-            << loopStatement.GetStop()
+            << GetStop()
             << "; "
-            << loopStatement.GetDeclaredVariable().GetName()
+            << GetStatementVariable().GetName()
             << " += "
-            << loopStatement.GetStep()
+            << GetStep()
             << ")";
-
-        return stream;
     }
 
     TileStatement::TileStatement(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width) 
-        : NestStatementBase(tileVariable), _matrixVariable(matrixVariable), _topVariable(topVariable), _leftVariable(leftVariable), _height(height), _width(width) 
+        : _tileVariable(tileVariable), _matrixVariable(matrixVariable), _topVariable(topVariable), _leftVariable(leftVariable), _height(height), _width(width) 
     {}
 
-    std::ostream& operator<<(std::ostream& stream, const TileStatement& tileStatement)
+    void TileStatement::Print(std::ostream& stream) const
     {
         stream << "float* "
-            << tileStatement.GetDeclaredVariable().GetName()
+            << GetStatementVariable().GetName()
             << " = Tile("
-            << tileStatement.GetMatrixVariable().GetName()
+            << GetMatrixVariable().GetName()
             << ", "
-            << tileStatement.GetTopVariable().GetName()
+            << GetTopVariable().GetName()
             << ", "
-            << tileStatement.GetLeftVariable().GetName()
+            << GetLeftVariable().GetName()
             << ", "
-            << tileStatement.GetHeight()
+            << GetHeight()
             << ", "
-            << tileStatement.GetWidth()
+            << GetWidth()
             <<");";
-        return stream;
     }
 
     void Nest::AddStatement(Nest::NestStatementPtr nestStatement)
     {
         nestStatement->SetPosition(Size());
         _statements.push_back(nestStatement);
-    }
-
-    void Nest::AddUsingDeclaration(Nest::UsingDeclarationPtr usingDeclaration)
-    {
-        _usingDeclarations.push_back(usingDeclaration);
     }
 
     int Nest::Size() const 
@@ -118,44 +111,26 @@ namespace tiler
     {
         IndentedOutputStream indentedStream(stream);
 
-        indentedStream << "// initialize" << endl;
-        for(const auto& usingDeclaration : _usingDeclarations)
-        {
-            indentedStream << *usingDeclaration << endl;
-        }
-
         // sort the declaratins based on the order
         auto copy = GetSortedStatementsCopy();
         VerifyStatementPositions(copy);
-        
-        indentedStream << endl << "// loop" << endl;
-        for(const auto& declaration : copy)
-        {
-            auto usingStatement = std::dynamic_pointer_cast<UsingDeclaration>(declaration);
-            if(usingStatement != nullptr)
-            {
-                indentedStream << *usingStatement << endl;
-            }
 
-            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(declaration);
+        for(const auto& statement : copy)
+        {
+            indentedStream << *statement << endl;
+
+            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(statement);
             if(loopStatement != nullptr)
             {
-                indentedStream << *loopStatement;
                 indentedStream << " {" << endl;
                 indentedStream.IncreaseIndent();
-            }
-
-            auto tileStatement = std::dynamic_pointer_cast<TileStatement>(declaration);
-            if(tileStatement != nullptr)
-            {
-                indentedStream << *tileStatement << endl;
             }
         }
 
         std::reverse(copy.begin(), copy.end());
-        for(const auto& declaration : copy)
+        for(const auto& statement : copy)
         {
-            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(declaration);
+            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(statement);
             if(loopStatement != nullptr)
             {
                 indentedStream.DecreaseIndent();
@@ -167,22 +142,25 @@ namespace tiler
     std::vector<Nest::NestStatementPtr> Nest::GetSortedStatementsCopy() const
     {
         std::vector<NestStatementPtr> copy(_statements);
-        std::sort(copy.begin(), copy.end(), [](const NestStatementPtr& a, const NestStatementPtr& b) { return a->GetPosition() < b->GetPosition();});
+        auto comparer = [](const NestStatementPtr& a, const NestStatementPtr& b) 
+        {
+            if(std::dynamic_pointer_cast<UsingDeclaration>(a) != nullptr && std::dynamic_pointer_cast<UsingDeclaration>(b) == nullptr)
+            {
+                return false;
+            }
+            return a->GetPosition() < b->GetPosition();
+        };
+
+        std::sort(copy.begin(), copy.end(), comparer);
         return copy;
     }
 
     void Nest::VerifyStatementPositions(std::vector<Nest::NestStatementPtr> sortedStatements) const
     {
         std::unordered_set<Variable> definedVariables;
-        
-        for(const auto& usingDeclaration : _usingDeclarations)
-        {
-            definedVariables.insert(usingDeclaration->GetMatrix());
-        }
-        
         for(const auto& declaration : sortedStatements)
         {
-            auto variable = declaration->GetDeclaredVariable();
+            auto variable = declaration->GetStatementVariable();
             if(definedVariables.find(variable) != definedVariables.end())
             {
                 throw std::logic_error("variable " + std::to_string(variable.GetID()) + " multiply defined");
@@ -216,8 +194,8 @@ namespace tiler
 
     NestDeclarer NestDeclarer::Using(Matrix matrix)
     {
-        auto declaration = std::make_shared<UsingDeclaration>(matrix);
-        _nest->AddUsingDeclaration(declaration);
+        auto statement = std::make_shared<UsingDeclaration>(matrix);
+        _nest->AddStatement(statement);
         return NestDeclarer(_nest);
     }
 
