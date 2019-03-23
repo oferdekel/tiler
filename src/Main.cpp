@@ -33,8 +33,8 @@ int main(int argc, char** argv)
         Using(A)
         .ForAll(i, 0, 10, 1)
             .ForAll(j, 0, 20, 2)
-            .Tile(B, A, i, j, 2, 2)
-                .ForAll(k, 0, 30, 3)    .Position(-3)
+                .ForAll(k, 0, 30, 3)
+                    .Tile(B, A, i, j, 2, 2)
                     .Print(std::cout);
     }
     catch(std::logic_error e)

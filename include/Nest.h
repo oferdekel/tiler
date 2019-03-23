@@ -18,11 +18,11 @@
 namespace tiler
 {
     // Generic element of a nest
-    class NestStatementBase
+    class StatementBase
     {
     public:
-        NestStatementBase();
-        virtual ~NestStatementBase() = default;
+        StatementBase();
+        virtual ~StatementBase() = default;
 
         virtual const Variable& GetStatementVariable() const = 0; 
 
@@ -38,9 +38,9 @@ namespace tiler
     };
 
     // Prints a loop declaration to a stream
-    std::ostream& operator<<(std::ostream& stream, const NestStatementBase& statement);
+    std::ostream& operator<<(std::ostream& stream, const StatementBase& statement);
 
-    class UsingStatement : public NestStatementBase
+    class UsingStatement : public StatementBase
     {
     public:
         UsingStatement(Matrix matrix);
@@ -55,7 +55,7 @@ namespace tiler
         Matrix _matrixVariable;
     };
 
-    class LoopStatement : public NestStatementBase
+    class LoopStatement : public StatementBase
     {
     public:
         LoopStatement(Variable indexVariable, int start, int stop, int step);
@@ -78,26 +78,31 @@ namespace tiler
     // Prints a loop declaration to a stream
     std::ostream& operator<<(std::ostream& stream, const LoopStatement& loopStatement);
 
-    class TileStatement : public NestStatementBase
+    class TileStatement : public StatementBase
     {
     public:
-        TileStatement(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width);
+        using StatementPtr = std::shared_ptr<StatementBase>;
+
+        TileStatement(Variable tileVariable, StatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, int height, int width);
 
         const Variable& GetStatementVariable() const override { return _tileVariable; }
 
         void Print(std::ostream& stream) const override;
 
-        Variable GetMatrixVariable() const { return _matrixVariable; }
-        Variable GetTopVariable() const { return _topVariable; }
-        Variable GetLeftVariable() const { return _leftVariable; }
+        void SetPositionByDependencies();
+
+        Variable GetMatrixVariable() const { return _matrixStatement -> GetStatementVariable(); }
+        Variable GetTopVariable() const { return _topStatement -> GetStatementVariable(); }
+        Variable GetLeftVariable() const { return _leftStatement -> GetStatementVariable(); }
+
         int GetHeight() const { return _height; }
         int GetWidth() const { return _width; }
 
     private:
-        Variable _tileVariable;  // TODO change to pointers to statements
-        Variable _matrixVariable;
-        Variable _topVariable;
-        Variable _leftVariable;
+        Variable _tileVariable;
+        StatementPtr _matrixStatement;
+        StatementPtr _topStatement;
+        StatementPtr _leftStatement;
         int _height;
         int _width;
     };
@@ -109,27 +114,25 @@ namespace tiler
     class Nest
     {
     public:
-        using NestStatementPtr = std::shared_ptr<NestStatementBase>;
+        using StatementPtr = std::shared_ptr<StatementBase>;
         using UsingStatementPtr = std::shared_ptr<UsingStatement>;
 
         // Adds an element to the nest
-        void AddStatement(NestStatementPtr nestStatement);
+        void AddStatement(StatementPtr nestStatement);
 
         // Returns the numer of elements defined in the nest
         int Size() const;
 
         // Returns a reference to the last element in the nest
-        NestStatementBase& Back();
+        StatementBase& Back();
+
+        StatementPtr FindStatementByVariable(const Variable& variable) const;
 
         // Prints the nest
-        void Print(std::ostream& stream) const;
+        void Print(std::ostream& stream);
 
     private:
-
-        std::vector<NestStatementPtr> GetSortedStatementsCopy() const;
-        void VerifyStatementPositions(std::vector<NestStatementPtr> sortedStatements) const;
-
-        std::vector<NestStatementPtr> _statements;
+        std::vector<StatementPtr> _statements;
     };
 
     class NestMutatorBase
@@ -143,10 +146,6 @@ namespace tiler
 
         inline auto Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width);
 
-        NestMutatorBase Position(double Position);
-
-        int NestSize() const;
-
         void Print(std::ostream& stream) const;
 
     protected:
@@ -157,6 +156,8 @@ namespace tiler
     {
     public:
         LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopStatement> loop);
+
+        LoopMutator Position(double Position);
 
     private:
         std::shared_ptr<LoopStatement> _loop;
@@ -184,7 +185,11 @@ namespace tiler
 
     inline auto NestMutatorBase::Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width)
     {
-        auto tile = std::make_shared<TileStatement>(tileVariable, matrixVariable, topVariable, leftVariable, height, width);
+        auto matrixStatement = _nest->FindStatementByVariable(matrixVariable);
+        auto topStatement = _nest->FindStatementByVariable(topVariable);
+        auto leftStatement = _nest->FindStatementByVariable(leftVariable);
+
+        auto tile = std::make_shared<TileStatement>(tileVariable, matrixStatement, topStatement, leftStatement, height, width);
         _nest->AddStatement(tile);
         return TileMutator(_nest, tile);
     }
