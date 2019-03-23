@@ -24,7 +24,7 @@ namespace tiler
         NestStatementBase();
         virtual ~NestStatementBase() = default;
 
-        virtual const Variable& GetStatementVariable() const = 0; // TODO change name
+        virtual const Variable& GetStatementVariable() const = 0; 
 
         virtual void Print(std::ostream& stream) const = 0;
 
@@ -40,10 +40,10 @@ namespace tiler
     // Prints a loop declaration to a stream
     std::ostream& operator<<(std::ostream& stream, const NestStatementBase& statement);
 
-    class UsingDeclaration : public NestStatementBase
+    class UsingStatement : public NestStatementBase
     {
     public:
-        UsingDeclaration(Matrix matrix);
+        UsingStatement(Matrix matrix);
 
         const Variable& GetStatementVariable() const override { return _matrixVariable; }
 
@@ -110,7 +110,7 @@ namespace tiler
     {
     public:
         using NestStatementPtr = std::shared_ptr<NestStatementBase>;
-        using UsingDeclarationPtr = std::shared_ptr<UsingDeclaration>;
+        using UsingStatementPtr = std::shared_ptr<UsingStatement>;
 
         // Adds an element to the nest
         void AddStatement(NestStatementPtr nestStatement);
@@ -132,18 +132,18 @@ namespace tiler
         std::vector<NestStatementPtr> _statements;
     };
 
-    class NestDeclarer
+    class NestMutatorBase
     {
     public:
-        NestDeclarer(std::shared_ptr<Nest> nest);
+        NestMutatorBase(std::shared_ptr<Nest> nest);
 
-        NestDeclarer Using(Matrix matrix);
+        NestMutatorBase Using(Matrix matrix);
 
         inline auto ForAll(Variable indexVariable, int start, int stop, int step);
 
         inline auto Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width);
 
-        NestDeclarer Position(double Position);
+        NestMutatorBase Position(double Position);
 
         int NestSize() const;
 
@@ -153,7 +153,7 @@ namespace tiler
         std::shared_ptr<Nest> _nest;
     };
 
-    class LoopMutator : public NestDeclarer
+    class LoopMutator : public NestMutatorBase
     {
     public:
         LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopStatement> loop);
@@ -162,7 +162,7 @@ namespace tiler
         std::shared_ptr<LoopStatement> _loop;
     };
 
-    class TileMutator : public NestDeclarer
+    class TileMutator : public NestMutatorBase
     {
     public:
         TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile);
@@ -175,14 +175,14 @@ namespace tiler
     //
     //
 
-    inline auto NestDeclarer::ForAll(Variable indexVariable, int start, int stop, int step)
+    inline auto NestMutatorBase::ForAll(Variable indexVariable, int start, int stop, int step)
     {
         auto loop = std::make_shared<LoopStatement>(indexVariable, start, stop, step);
         _nest->AddStatement(loop);
         return LoopMutator(_nest, loop);
     }
 
-    inline auto NestDeclarer::Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width)
+    inline auto NestMutatorBase::Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int height, int width)
     {
         auto tile = std::make_shared<TileStatement>(tileVariable, matrixVariable, topVariable, leftVariable, height, width);
         _nest->AddStatement(tile);
@@ -190,18 +190,18 @@ namespace tiler
     }
 
     template <typename... T> 
-    NestDeclarer Using(T... t) // TODO change name
+    NestMutatorBase Using(T... t)
     {
         auto nest = std::make_shared<Nest>();
-        NestDeclarer NestDeclarer(nest);
-        return NestDeclarer.Using(t...);
+        NestMutatorBase NestMutatorBase(nest);
+        return NestMutatorBase.Using(t...);
     }
 
     template <typename... T> 
     LoopMutator ForAll(T... t)
     {
         auto nest = std::make_shared<Nest>();
-        NestDeclarer NestDeclarer(nest);
-        return NestDeclarer.ForAll(t...);
+        NestMutatorBase NestMutatorBase(nest);
+        return NestMutatorBase.ForAll(t...);
     }
 }

@@ -14,6 +14,11 @@
 
 namespace tiler
 {
+    template<typename IsType, typename OrigType>
+    bool IsPointerTo(const OrigType& pointer)
+    {
+        return (std::dynamic_pointer_cast<IsType>(pointer) != nullptr);
+    }
 
     double NestStatementBase::_positionCounter = 0;
 
@@ -36,10 +41,10 @@ namespace tiler
         return stream;
     }
 
-    UsingDeclaration::UsingDeclaration(Matrix matrixVariable) : _matrixVariable(matrixVariable)
+    UsingStatement::UsingStatement(Matrix matrixVariable) : _matrixVariable(matrixVariable)
     {}
 
-    void UsingDeclaration::Print(std::ostream& stream) const
+    void UsingStatement::Print(std::ostream& stream) const
     {
         stream << "float " 
             << GetMatrix().GetName() 
@@ -111,7 +116,7 @@ namespace tiler
     {
         IndentedOutputStream indentedStream(stream);
 
-        // sort the declaratins based on the order
+        // sort the statements based on the order
         auto copy = GetSortedStatementsCopy();
         VerifyStatementPositions(copy);
 
@@ -130,7 +135,7 @@ namespace tiler
         std::reverse(copy.begin(), copy.end());
         for(const auto& statement : copy)
         {
-            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(statement);
+            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(statement); // TODO replace all with IsPointerTo
             if(loopStatement != nullptr)
             {
                 indentedStream.DecreaseIndent();
@@ -144,10 +149,16 @@ namespace tiler
         std::vector<NestStatementPtr> copy(_statements);
         auto comparer = [](const NestStatementPtr& a, const NestStatementPtr& b) 
         {
-            if(std::dynamic_pointer_cast<UsingDeclaration>(a) != nullptr && std::dynamic_pointer_cast<UsingDeclaration>(b) == nullptr)
+            if (IsPointerTo<UsingStatement>(a) && !IsPointerTo<UsingStatement>(b))
+            {
+                return true;
+            }
+
+            if (IsPointerTo<UsingStatement>(b) && !IsPointerTo<UsingStatement>(a))
             {
                 return false;
             }
+
             return a->GetPosition() < b->GetPosition();
         };
 
@@ -158,15 +169,15 @@ namespace tiler
     void Nest::VerifyStatementPositions(std::vector<Nest::NestStatementPtr> sortedStatements) const
     {
         std::unordered_set<Variable> definedVariables;
-        for(const auto& declaration : sortedStatements)
+        for(const auto& statement : sortedStatements)
         {
-            auto variable = declaration->GetStatementVariable();
+            auto variable = statement->GetStatementVariable();
             if(definedVariables.find(variable) != definedVariables.end())
             {
                 throw std::logic_error("variable " + std::to_string(variable.GetID()) + " multiply defined");
             }
 
-            auto tileStatement = std::dynamic_pointer_cast<TileStatement>(declaration);
+            auto tileStatement = std::dynamic_pointer_cast<TileStatement>(statement);
             if(tileStatement != nullptr)
             {
                 if(definedVariables.find(tileStatement->GetMatrixVariable()) == definedVariables.end())
@@ -189,35 +200,35 @@ namespace tiler
         }
     }
 
-    NestDeclarer::NestDeclarer(std::shared_ptr<Nest> nest) : _nest(nest) 
+    NestMutatorBase::NestMutatorBase(std::shared_ptr<Nest> nest) : _nest(nest) 
     {}
 
-    NestDeclarer NestDeclarer::Using(Matrix matrix)
+    NestMutatorBase NestMutatorBase::Using(Matrix matrix)
     {
-        auto statement = std::make_shared<UsingDeclaration>(matrix);
+        auto statement = std::make_shared<UsingStatement>(matrix);
         _nest->AddStatement(statement);
-        return NestDeclarer(_nest);
+        return NestMutatorBase(_nest);
     }
 
-    NestDeclarer NestDeclarer::Position(double Position) 
+    NestMutatorBase NestMutatorBase::Position(double Position) 
     { 
-        _nest->Back().SetPosition(Position); return NestDeclarer(_nest); 
+        _nest->Back().SetPosition(Position); return NestMutatorBase(_nest); 
     }
 
-    int NestDeclarer::NestSize() const 
+    int NestMutatorBase::NestSize() const 
     { 
         return _nest->Size(); 
     }
 
-    void NestDeclarer::Print(std::ostream& stream) const
+    void NestMutatorBase::Print(std::ostream& stream) const
     { 
         return _nest->Print(stream); 
     }
 
-    LoopMutator::LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopStatement> loop) : NestDeclarer(nest), _loop(loop) 
+    LoopMutator::LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopStatement> loop) : NestMutatorBase(nest), _loop(loop) 
     {}
 
-    TileMutator::TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile) : NestDeclarer(nest), _tile(tile) 
+    TileMutator::TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile) : NestMutatorBase(nest), _tile(tile) 
     {}
 
 }
