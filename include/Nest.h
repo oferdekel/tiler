@@ -60,7 +60,13 @@ namespace tiler
         int _step;
     };
 
-    class UsingStatement : public StatementBase
+    class MatrixStatement : public StatementBase
+    {
+    public:
+        virtual const MatrixLayout& GetMatrixLayout() const = 0;
+    };
+
+    class UsingStatement : public MatrixStatement
     {
     public:
         UsingStatement(Matrix matrix);
@@ -69,13 +75,13 @@ namespace tiler
 
         void Print(std::ostream& stream) const override;
 
-        const Matrix& GetMatrix() const { return _matrixVariable; } 
+        const MatrixLayout& GetMatrixLayout() const override { return _matrixVariable; } 
 
     private:
         Matrix _matrixVariable;
     };
 
-    class TileStatement : public StatementBase
+    class TileStatement : public MatrixStatement
     {
     public:
         using StatementPtr = std::shared_ptr<StatementBase>;
@@ -83,6 +89,8 @@ namespace tiler
         TileStatement(Variable tileVariable, StatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, int height, int width);
 
         const Variable& GetStatementVariable() const override { return _tileVariable; }
+
+        const MatrixLayout& GetMatrixLayout() const override { return MatrixLayout(0,0,MatrixOrder::rowMajor,0); } 
 
         void Print(std::ostream& stream) const override;
 

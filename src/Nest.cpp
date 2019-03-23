@@ -67,11 +67,11 @@ namespace tiler
     void UsingStatement::Print(std::ostream& stream) const
     {
         stream << "float " 
-            << GetMatrix().GetName() 
+            << _matrixVariable.GetName() 
             << "["
-            << GetMatrix().Size()
+            << _matrixVariable.Size()
             << "] = ";
-        GetMatrix().PrintData(stream);
+        _matrixVariable.PrintData(stream);
         stream << ";";
     }
 
