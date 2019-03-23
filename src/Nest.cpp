@@ -41,20 +41,6 @@ namespace tiler
         return stream;
     }
 
-    UsingStatement::UsingStatement(Matrix matrixVariable) : _matrixVariable(matrixVariable)
-    {}
-
-    void UsingStatement::Print(std::ostream& stream) const
-    {
-        stream << "float " 
-            << GetMatrix().GetName() 
-            << "["
-            << GetMatrix().Size()
-            << "] = ";
-        GetMatrix().PrintData(stream);
-        stream << ";";
-    }
-
     LoopStatement::LoopStatement(Variable indexVariable, int start, int stop, int step) : _indexVariable(indexVariable), _start(start), _stop(stop), _step(step) 
     {}
 
@@ -73,6 +59,20 @@ namespace tiler
             << " += "
             << GetStep()
             << ")";
+    }
+
+    UsingStatement::UsingStatement(Matrix matrixVariable) : _matrixVariable(matrixVariable)
+    {}
+
+    void UsingStatement::Print(std::ostream& stream) const
+    {
+        stream << "float " 
+            << GetMatrix().GetName() 
+            << "["
+            << GetMatrix().Size()
+            << "] = ";
+        GetMatrix().PrintData(stream);
+        stream << ";";
     }
 
     TileStatement::TileStatement(Variable tileVariable, StatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, int height, int width)
@@ -183,8 +183,7 @@ namespace tiler
         {
             indentedStream << *statement;
 
-            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(statement);
-            if(loopStatement != nullptr)
+            if(IsPointerTo<LoopStatement>(statement))
             {
                 indentedStream << " {";
                 indentedStream.IncreaseIndent();
@@ -197,8 +196,7 @@ namespace tiler
         std::reverse(_statements.begin(), _statements.end());
         for(const auto& statement : _statements)
         {
-            auto loopStatement = std::dynamic_pointer_cast<LoopStatement>(statement); // TODO replace all with IsPointerTo
-            if(loopStatement != nullptr)
+            if(IsPointerTo<LoopStatement>(statement))
             {
                 indentedStream.DecreaseIndent();
                 indentedStream << "}" << endl;

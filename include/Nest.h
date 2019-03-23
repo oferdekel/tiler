@@ -40,21 +40,6 @@ namespace tiler
     // Prints a loop declaration to a stream
     std::ostream& operator<<(std::ostream& stream, const StatementBase& statement);
 
-    class UsingStatement : public StatementBase
-    {
-    public:
-        UsingStatement(Matrix matrix);
-
-        const Variable& GetStatementVariable() const override { return _matrixVariable; }
-
-        void Print(std::ostream& stream) const override;
-
-        const Matrix& GetMatrix() const { return _matrixVariable; } 
-
-    private:
-        Matrix _matrixVariable;
-    };
-
     class LoopStatement : public StatementBase
     {
     public:
@@ -75,8 +60,20 @@ namespace tiler
         int _step;
     };
 
-    // Prints a loop declaration to a stream
-    std::ostream& operator<<(std::ostream& stream, const LoopStatement& loopStatement);
+    class UsingStatement : public StatementBase
+    {
+    public:
+        UsingStatement(Matrix matrix);
+
+        const Variable& GetStatementVariable() const override { return _matrixVariable; }
+
+        void Print(std::ostream& stream) const override;
+
+        const Matrix& GetMatrix() const { return _matrixVariable; } 
+
+    private:
+        Matrix _matrixVariable;
+    };
 
     class TileStatement : public StatementBase
     {
@@ -106,9 +103,6 @@ namespace tiler
         int _height;
         int _width;
     };
-
-    // Prints a tile declaration to a stream
-    std::ostream& operator<<(std::ostream& stream, const TileStatement& tileStatement);
 
     // Datastructure that stores the variables that make up the nested loop
     class Nest

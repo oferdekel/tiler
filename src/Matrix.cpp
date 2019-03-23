@@ -13,58 +13,65 @@
 
 namespace  tiler
 {
-    Matrix::Matrix(float* data, int numRows, int numColumns, MatrixOrder order, int leadingDimensionSize) : _data(data), _numRows(numRows), _numColumns(numColumns), _order(order), _leadingDimensionSize(leadingDimensionSize)
-    {}
-
-    Matrix::Matrix(float* data, int numRows, int numColumns, MatrixOrder order) : _data(data), _numRows(numRows), _numColumns(numColumns), _order(order)
+    int InitLeadingDimensionSize(int numRows, int numColumns, MatrixOrder order)
     {
-        if(_order == MatrixOrder::rowMajor)
+        if(order == MatrixOrder::rowMajor)
         {
-            _leadingDimensionSize = _numColumns;
+            return numColumns;
         }
         else
         {
-            _leadingDimensionSize = _numRows;
+            return numRows;
         }
+
     }
+
+    MatrixLayout::MatrixLayout(int numRows, int numColumns, MatrixOrder order, int leadingDimensionSize) : _numRows(numRows), _numColumns(numColumns), _order(order), _leadingDimensionSize(leadingDimensionSize)
+    {}
+
+    Matrix::Matrix(float* data, int numRows, int numColumns, MatrixOrder order, int leadingDimensionSize) : MatrixLayout(numRows, numColumns, order, leadingDimensionSize), _data(data) 
+    {}
+
+    Matrix::Matrix(float* data, int numRows, int numColumns, MatrixOrder order) : MatrixLayout(numRows, numColumns, order, InitLeadingDimensionSize(numRows, numColumns, order)), _data(data) 
+    {}
 
     float* Matrix::GetPointer(int i, int j) 
     {
-        if(_order == MatrixOrder::rowMajor)
+        if(GetOrder() == MatrixOrder::rowMajor)
         {
-            return _data + i * _leadingDimensionSize + j;
+            return _data + i * GetLeadingDimensionSize() + j;
         }
         else
         {
-            return _data + i + j * _leadingDimensionSize;
+            return _data + i + j * GetLeadingDimensionSize();
         }
     }
 
     const float* Matrix::GetPointer(int i, int j) const 
     {
-        if(_order == MatrixOrder::rowMajor)
+        if(GetOrder() == MatrixOrder::rowMajor)
         {
-            return _data + i * _leadingDimensionSize + j;
+            return _data + i * GetLeadingDimensionSize() + j;
         }
         else
         {
-            return _data + i + j * _leadingDimensionSize;
+            return _data + i + j * GetLeadingDimensionSize();
         }
     }
 
     void Matrix::Print(std::ostream& stream) const
     {
         stream << "{ {" << std::setw(5) << setiosflags(std::ios::fixed) << std::setprecision(2) << (*this)(0, 0);
-        for(int j=1; j<_numColumns; ++j)
+        for(int j=1; j<NumColumns(); ++j)
         {
             stream << ", " << std::setw(5) << setiosflags(std::ios::fixed) << std::setprecision(2) << (*this)(0, j);
         }
         stream << " }";
 
-        for(int i=1; i<_numRows; ++i)
+        for(int i=1; i<NumRows(); ++i)
         {
             stream << ",\n  { " << (*this)(i, 0);
-            for(int j=1; j<_numColumns; ++j)
+            for(int j=1; j<NumColumns(); ++j)
             {
                 stream << ", " << std::setw(5) << setiosflags(std::ios::fixed) << std::setprecision(2) << (*this)(i, j);
             }
@@ -76,7 +83,7 @@ namespace  tiler
     void Matrix::PrintData(std::ostream& stream) const
     {
         stream << "{" << std::setw(5) << setiosflags(std::ios::fixed) << std::setprecision(2) << _data[0];
-        for(int i=1; i<_numRows * _numColumns; ++i)
+        for(int i=1; i<NumRows() * NumColumns(); ++i)
         {
             stream << ", " << std::setw(5) << setiosflags(std::ios::fixed) << std::setprecision(2) << _data[i];
         }
