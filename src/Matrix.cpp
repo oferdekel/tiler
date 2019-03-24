@@ -19,14 +19,25 @@ namespace  tiler
     MatrixLayout::MatrixLayout(int numRows, int numColumns, MatrixOrder order) : _numRows(numRows), _numColumns(numColumns), _order(order), _leadingDimensionSize((order == MatrixOrder::rowMajor) ? numColumns : numRows)
     {}
 
+    int MatrixLayout::operator()(int row, int column) const
+    {
+        if(_order == MatrixOrder::rowMajor)
+        {
+            return row * _leadingDimensionSize + column;
+        }
+        else
+        {
+            return row + column * _leadingDimensionSize;
+        }
+    }
+
     std::vector<float> MatrixToVector(MatrixOrder order, std::initializer_list<std::initializer_list<float>> list)
     {
         int numRows = (int)list.size();
         int numColumns = (int)(list.begin()->size());
-        int rowSkip = (order == MatrixOrder::rowMajor) ? numColumns : 1;
-        int columnSkip = (order == MatrixOrder::columnMajor) ? numRows : 1;
 
         std::vector<float> v(numRows * numColumns);
+        MatrixLayout matrixLayout(numRows, numColumns, order);
 
         int i = 0;
         for (auto rowIter = list.begin(); rowIter < list.end(); ++rowIter)
@@ -40,7 +51,7 @@ namespace  tiler
             int j = 0;
             for (auto elementIter = rowIter->begin(); elementIter < rowIter->end(); ++elementIter)
             {
-                v[i * rowSkip + j * columnSkip] = *elementIter;
+                v[matrixLayout(i,j)] = *elementIter;
                 ++j;
             }
             ++i;

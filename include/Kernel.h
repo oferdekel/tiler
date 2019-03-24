@@ -13,5 +13,5 @@
 
 namespace tiler
 {
-    void MMKernelRRR222(std::ostream& stream, const MatrixStatement& matrixA, const MatrixStatement& matrixB, const MatrixStatement& matrixC);
+    void MMKernel222(std::ostream& stream, const MatrixStatement& matrixA, const MatrixStatement& matrixB, const MatrixStatement& matrixC);
 }

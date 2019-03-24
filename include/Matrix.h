@@ -25,6 +25,7 @@ namespace tiler
         int Size() const { return _numRows * _numColumns; }
         int GetLeadingDimensionSize() const { return _leadingDimensionSize; }
         MatrixOrder GetOrder() const { return _order; }
+        int operator()(int row, int column) const;
 
     private:
         int _numRows;
