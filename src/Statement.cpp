@@ -76,7 +76,8 @@ namespace tiler
             << ", cols:"
             << GetLayout().NumColumns()
             << ", order:"
-            << ((_matrixLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
+            << ((_matrixLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
+            << std::endl;
     }
 
     TileStatement::TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)

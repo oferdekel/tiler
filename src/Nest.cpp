@@ -31,8 +31,6 @@ namespace tiler
 
     void Nest::Print(std::ostream& stream)
     {
-        IndentedOutputStream indentedStream(stream);
-
         // pre-sort pass
         for(const auto& statement : _statements)
         {
@@ -79,16 +77,15 @@ namespace tiler
         // post-sort forward pass
         for(const auto& statement : _statements)
         {
-            indentedStream << *statement;
+            stream << endil;
+            stream << *statement;
 
             if(IsPointerTo<LoopStatement>(statement))
             {
-                indentedStream << endl;
-                indentedStream << "{";
-                indentedStream.IncreaseIndent();
+                stream << endil;
+                stream << "{";
+                IncreaseIndent();
             }
-
-            indentedStream << endl;
         }
 
         // backwards pass
@@ -97,8 +94,8 @@ namespace tiler
         {
             if(IsPointerTo<LoopStatement>(statement))
             {
-                indentedStream.DecreaseIndent();
-                indentedStream << "}" << endl;
+                DecreaseIndent();
+                stream << endil << "}";
             }
         }
     }

@@ -8,15 +8,19 @@
 
 #include "IndentedOutputStream.h"
 
+
 namespace tiler
 {
-    IndentedOutputStream::IndentedOutputStream(std::ostream& stream) : _stream(stream)
-    {}
+    int globalIndentLevel = 0;
 
-    IndentedOutputStream& IndentedOutputStream::operator<<(Endl) 
+
+    std::ostream& endil(std::ostream& stream)
     {
-        _stream.get() << std::endl;
-        _lineBeginning = true;
-        return *this;
+        stream << std::endl;
+        stream << std::string(4 * globalIndentLevel, ' ');
+        return stream;
     }
+ 
+    void IncreaseIndent() { globalIndentLevel++; }
+    void DecreaseIndent() { globalIndentLevel--; }
 }
