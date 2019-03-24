@@ -8,6 +8,7 @@ set(include
     include/IndentedOutputStream.h
     include/Matrix.h
     include/Nest.h
+    include/Statement.h
     include/Variable.h
 )
 
@@ -16,6 +17,7 @@ set(src
     src/Main.cpp
     src/Matrix.cpp
     src/Nest.cpp
+    src/Statement.cpp
     src/Variable.cpp
 )
 

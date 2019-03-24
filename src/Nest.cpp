@@ -10,7 +10,6 @@
 #include "IndentedOutputStream.h"
 
 #include <algorithm>
-#include <unordered_set>
 
 namespace tiler
 {
@@ -18,88 +17,6 @@ namespace tiler
     bool IsPointerTo(const OrigType& pointer)
     {
         return (std::dynamic_pointer_cast<IsType>(pointer) != nullptr);
-    }
-
-    double StatementBase::_positionCounter = 0;
-
-    StatementBase::StatementBase() : _position(_positionCounter++)
-    {}
-
-    void StatementBase::SetPosition(double Position) 
-    { 
-        _position = Position; 
-    }
-
-    double StatementBase::GetPosition() const 
-    { 
-        return _position; 
-    }
-
-    std::ostream& operator<<(std::ostream& stream, const StatementBase& statement)
-    {
-        statement.Print(stream);
-        return stream;
-    }
-
-    LoopStatement::LoopStatement(Variable indexVariable, int start, int stop, int step) : _indexVariable(indexVariable), _start(start), _stop(stop), _step(step) 
-    {}
-
-    void LoopStatement::Print(std::ostream& stream) const
-    {
-        stream << "for(int " 
-            << GetStatementVariable().GetName()
-            << " = " 
-            << GetStart() 
-            << "; " 
-            << GetStatementVariable().GetName()
-            << " < " 
-            << GetStop()
-            << "; "
-            << GetStatementVariable().GetName()
-            << " += "
-            << GetStep()
-            << ")";
-    }
-
-    UsingStatement::UsingStatement(Matrix matrixVariable) : _matrixVariable(matrixVariable)
-    {}
-
-    void UsingStatement::Print(std::ostream& stream) const
-    {
-        stream << "float " 
-            << _matrixVariable.GetName() 
-            << "["
-            << _matrixVariable.Size()
-            << "] = ";
-        _matrixVariable.PrintData(stream);
-        stream << ";";
-    }
-
-    TileStatement::TileStatement(Variable tileVariable, StatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, int height, int width)
-        : _tileVariable(tileVariable), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement), _height(height), _width(width) 
-    {}
-
-    void TileStatement::Print(std::ostream& stream) const
-    {
-        stream << "float* "
-            << GetStatementVariable().GetName()
-            << " = Tile("
-            << GetMatrixVariable().GetName()
-            << ", "
-            << GetTopVariable().GetName()
-            << ", "
-            << GetLeftVariable().GetName()
-            << ", "
-            << GetHeight()
-            << ", "
-            << GetWidth()
-            <<");";
-    }
-
-    void TileStatement::SetPositionByDependencies()
-    {
-        double position = std::max(_topStatement->GetPosition(), _leftStatement->GetPosition());
-        SetPosition(position);
     }
 
     void Nest::AddStatement(Nest::StatementPtr nestStatement)
@@ -116,19 +33,6 @@ namespace tiler
     StatementBase& Nest::Back() 
     { 
         return *(_statements.back()); 
-    }
-
-    Nest::StatementPtr Nest::FindStatementByVariable(const Variable& variable) const
-    {
-        for(const auto& statement : _statements)
-        {
-            if(statement->GetStatementVariable() == variable)
-            {
-                return statement;
-            }
-        }
-
-        throw std::logic_error("can't find variable " + variable.GetName());
     }
 
     void Nest::Print(std::ostream& stream)
