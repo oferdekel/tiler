@@ -20,10 +20,10 @@ namespace tiler
     class StatementBase
     {
     public:
-        StatementBase();
+        StatementBase(const Variable& variable);
         virtual ~StatementBase() = default;
 
-        virtual const Variable& GetStatementVariable() const = 0; 
+        const Variable& GetVariable() const { return _variable; }
 
         virtual void Print(std::ostream& stream) const = 0;
 
@@ -32,6 +32,7 @@ namespace tiler
         double GetPosition() const;
 
     private:
+        Variable _variable; 
         static double _positionCounter;
         double _position = 0;
     };
@@ -44,8 +45,6 @@ namespace tiler
     public:
         LoopStatement(const Variable& indexVariable, int start, int stop, int step);
 
-        const Variable& GetStatementVariable() const override { return _indexVariable; }
-
         void Print(std::ostream& stream) const override;
 
         int GetStart() const { return _start; }
@@ -53,7 +52,6 @@ namespace tiler
         int GetStep() const { return _step; }
 
     private:
-        Variable _indexVariable; 
         int _start;
         int _stop;
         int _step;
@@ -62,6 +60,8 @@ namespace tiler
     class MatrixStatement : public StatementBase
     {
     public:
+        using StatementBase::StatementBase;
+
         virtual const MatrixLayout& GetLayout() const = 0;
     };
 
@@ -70,14 +70,11 @@ namespace tiler
     public:
         UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data);
 
-        const Variable& GetStatementVariable() const override { return _matrixVariable; }
-
         void Print(std::ostream& stream) const override;
 
         const MatrixLayout& GetLayout() const override { return _matrixLayout; } 
 
     private:
-        Variable _matrixVariable;
         MatrixLayout _matrixLayout;
         float* _data;
     };
@@ -90,20 +87,17 @@ namespace tiler
 
         TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout);
 
-        const Variable& GetStatementVariable() const override { return _tileVariable; }
-
         const MatrixLayout& GetLayout() const override { return _tileLayout; } 
 
         void Print(std::ostream& stream) const override;
 
         void SetPositionByDependencies();
 
-        Variable GetMatrixVariable() const { return _matrixStatement -> GetStatementVariable(); }
-        Variable GetTopVariable() const { return _topStatement -> GetStatementVariable(); }
-        Variable GetLeftVariable() const { return _leftStatement -> GetStatementVariable(); }
+        Variable GetMatrixVariable() const { return _matrixStatement -> GetVariable(); }
+        Variable GetTopVariable() const { return _topStatement -> GetVariable(); }
+        Variable GetLeftVariable() const { return _leftStatement -> GetVariable(); }
 
     private:
-        Variable _tileVariable;
         MatrixStatementPtr _matrixStatement;
         StatementPtr _topStatement;
         StatementPtr _leftStatement;
@@ -117,8 +111,6 @@ namespace tiler
         using KernelType = std::function<void(std::ostream&, const MatrixStatement&, const MatrixStatement&, const MatrixStatement&)>;
 
         KernelStatement(MatrixStatementPtr matrixAStatement, MatrixStatementPtr matrixBStatement, MatrixStatementPtr matrixCStatement, KernelType kernel);
-
-        const Variable& GetStatementVariable() const override { return _matrixCStatement->GetStatementVariable(); }
 
         void Print(std::ostream& stream) const override;
 

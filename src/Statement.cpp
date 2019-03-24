@@ -14,7 +14,7 @@ namespace tiler
 {
     double StatementBase::_positionCounter = 0;
 
-    StatementBase::StatementBase() : _position(_positionCounter++)
+    StatementBase::StatementBase(const Variable& variable) : _variable(variable), _position(_positionCounter++)
     {}
 
     void StatementBase::SetPosition(double Position) 
@@ -33,36 +33,36 @@ namespace tiler
         return stream;
     }
 
-    LoopStatement::LoopStatement(const Variable& indexVariable, int start, int stop, int step) : _indexVariable(indexVariable), _start(start), _stop(stop), _step(step) 
+    LoopStatement::LoopStatement(const Variable& indexVariable, int start, int stop, int step) : StatementBase(indexVariable), _start(start), _stop(stop), _step(step) 
     {}
 
     void LoopStatement::Print(std::ostream& stream) const
     {
         stream << "for(int " 
-            << GetStatementVariable().GetName()
+            << GetVariable().GetName()
             << " = " 
             << GetStart() 
             << "; " 
-            << GetStatementVariable().GetName()
+            << GetVariable().GetName()
             << " < " 
             << GetStop()
             << "; "
-            << GetStatementVariable().GetName()
+            << GetVariable().GetName()
             << " += "
             << GetStep()
             << ")    // ForAll statement, position:"
             << GetPosition();
     }
 
-    UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data) : _matrixVariable(matrixVariable), _matrixLayout(matrixLayout), _data(data)
+    UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data) : MatrixStatement(matrixVariable), _matrixLayout(matrixLayout), _data(data)
     {}
 
     void UsingStatement::Print(std::ostream& stream) const
     {
         stream << "float " 
-            << _matrixVariable.GetName() 
+            << GetVariable().GetName() 
             << "["
-            << _matrixLayout.Size()
+            << GetLayout().Size()
             << "] = {"
             << *_data;
 
@@ -72,21 +72,21 @@ namespace tiler
         }
 
         stream << "};    // Using statement, rows:"
-            << _matrixLayout.NumRows()
+            << GetLayout().NumRows()
             << ", cols:"
-            << _matrixLayout.NumColumns()
+            << GetLayout().NumColumns()
             << ", order:"
             << ((_matrixLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
     }
 
     TileStatement::TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)
-        : _tileVariable(tileVariable), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement), _tileLayout(tileLayout)
+        : MatrixStatement(tileVariable), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement), _tileLayout(tileLayout)
     {}
 
     void TileStatement::Print(std::ostream& stream) const
     {
         stream << "float* "
-            << GetStatementVariable().GetName()
+            << GetVariable().GetName()
             << " = "
             << GetMatrixVariable().GetName()
             << " + ";
@@ -113,11 +113,11 @@ namespace tiler
         }
 
         stream << "    // Tile statement, rows:"
-            << _tileLayout.NumRows()
+            << GetLayout().NumRows()
             << ", cols:"
-            << _tileLayout.NumColumns()
+            << GetLayout().NumColumns()
             << ", order:"
-            << ((_tileLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
+            << ((GetLayout().GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
     }
 
     void TileStatement::SetPositionByDependencies()
@@ -127,7 +127,7 @@ namespace tiler
     }
 
     KernelStatement::KernelStatement(MatrixStatementPtr matrixAStatement, MatrixStatementPtr matrixBStatement, MatrixStatementPtr matrixCStatement, KernelType kernel) 
-        : _matrixAStatement(matrixAStatement), _matrixBStatement(matrixBStatement), _matrixCStatement(matrixCStatement), _kernel(kernel)
+        : StatementBase(Variable()), _matrixAStatement(matrixAStatement), _matrixBStatement(matrixBStatement), _matrixCStatement(matrixCStatement), _kernel(kernel)
     {}
 
     void KernelStatement::Print(std::ostream& stream) const

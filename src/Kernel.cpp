@@ -13,10 +13,10 @@ namespace tiler
     void MMKernelRRR222(std::ostream& stream, const MatrixStatement& matrixA, const MatrixStatement& matrixB, const MatrixStatement& matrixC)
     {
         stream << "test "
-            << matrixA.GetStatementVariable().GetName()
+            << matrixA.GetVariable().GetName()
             << " "
-            << matrixB.GetStatementVariable().GetName()
+            << matrixB.GetVariable().GetName()
             << " "
-            << matrixC.GetStatementVariable().GetName();
+            << matrixC.GetVariable().GetName();
     } 
 }

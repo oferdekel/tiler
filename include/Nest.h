@@ -90,7 +90,7 @@ namespace tiler
     {
         for(const auto& statement : _statements)
         {
-            if(statement->GetStatementVariable() == variable)
+            if(statement->GetVariable() == variable)
             {
                 auto typedStatement = std::dynamic_pointer_cast<StatementType>(statement);
                 if(typedStatement != nullptr)
@@ -121,7 +121,7 @@ namespace tiler
         
         if(matrixLayout.NumRows() % numRows != 0 || matrixLayout.NumColumns() % numColumns)
         {
-            throw std::logic_error("size of tile " + tileVariable.GetName() + " is incompatible with matrix " + matrixStatement->GetStatementVariable().GetName());
+            throw std::logic_error("size of tile " + tileVariable.GetName() + " is incompatible with matrix " + matrixStatement->GetVariable().GetName());
         }
 
         MatrixLayout tileLayout(numRows, numColumns, matrixLayout.GetOrder(), matrixLayout.GetLeadingDimensionSize());
