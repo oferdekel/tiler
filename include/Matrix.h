@@ -7,8 +7,6 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include "Variable.h"
-
 #include <iostream>
 #include <vector>
 
@@ -16,7 +14,7 @@ namespace tiler
 {
     enum class MatrixOrder { rowMajor, columnMajor };
 
-    class MatrixLayout : public Variable
+    class MatrixLayout
     {
     public:
         MatrixLayout(int numRows, int numColumns, MatrixOrder order, int leadingDimensionSize);

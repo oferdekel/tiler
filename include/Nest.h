@@ -31,11 +31,8 @@ namespace tiler
         // Returns the numer of elements defined in the nest
         int Size() const;
 
-        // Returns a reference to the last element in the nest
-        StatementBase& Back();
-
         template <typename StatementType = StatementBase>
-        std::shared_ptr<StatementType> FindStatementByVariable(const Variable& variable) const;
+        std::shared_ptr<StatementType> FindStatementByTypeAndVariable(const Variable& variable) const;
 
         // Prints the nest
         void Print(std::ostream& stream);
@@ -49,13 +46,13 @@ namespace tiler
     public:
         NestMutatorBase(std::shared_ptr<Nest> nest);
 
-        NestMutatorBase Using(Matrix matrix);
+        NestMutatorBase Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data);
 
         inline auto ForAll(Variable indexVariable, int start, int stop, int step);
 
         inline auto Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int numRows, int numColumns);
 
-        inline auto Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel);
+        NestMutatorBase Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel);
 
         void Print(std::ostream& stream) const;
 
@@ -71,6 +68,7 @@ namespace tiler
         LoopMutator Position(double Position);
 
     private:
+        static double _loopCounter;
         std::shared_ptr<LoopStatement> _loop;
     };
 
@@ -88,7 +86,7 @@ namespace tiler
     //
 
     template <typename StatementType>
-    std::shared_ptr<StatementType> Nest::FindStatementByVariable(const Variable& variable) const
+    std::shared_ptr<StatementType> Nest::FindStatementByTypeAndVariable(const Variable& variable) const
     {
         for(const auto& statement : _statements)
         {
@@ -118,7 +116,7 @@ namespace tiler
 
     inline auto NestMutatorBase::Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int numRows, int numColumns)
     {
-        auto matrixStatement = _nest->FindStatementByVariable<MatrixStatement>(matrixVariable);
+        auto matrixStatement = _nest->FindStatementByTypeAndVariable<MatrixStatement>(matrixVariable);
         auto matrixLayout = matrixStatement->GetLayout();
         
         if(matrixLayout.NumRows() % numRows != 0 || matrixLayout.NumColumns() % numColumns)
@@ -128,38 +126,13 @@ namespace tiler
 
         MatrixLayout tileLayout(numRows, numColumns, matrixLayout.GetOrder(), matrixLayout.GetLeadingDimensionSize());
 
-        auto topStatement = _nest->FindStatementByVariable(topVariable);
-        auto leftStatement = _nest->FindStatementByVariable(leftVariable);
+        auto topStatement = _nest->FindStatementByTypeAndVariable(topVariable);
+        auto leftStatement = _nest->FindStatementByTypeAndVariable(leftVariable);
 
         auto tile = std::make_shared<TileStatement>(tileVariable, matrixStatement, topStatement, leftStatement, tileLayout);
         _nest->AddStatement(tile);
         return TileMutator(_nest, tile);
     }
 
-    inline auto NestMutatorBase::Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel)
-    {
-        auto matrixAStatement = _nest->FindStatementByVariable<MatrixStatement>(matrixAVariable);
-        auto matrixBStatement = _nest->FindStatementByVariable<MatrixStatement>(matrixBVariable);
-        auto matrixCStatement = _nest->FindStatementByVariable<MatrixStatement>(matrixCVariable);
-
-        auto kernelStatement = std::make_shared<KernelStatement>(matrixAStatement, matrixBStatement, matrixCStatement, kernel);
-        _nest->AddStatement(kernelStatement);
-        return NestMutatorBase(_nest); // TODO this doesnt require auto!!
-    }
-
-    template <typename... T> 
-    NestMutatorBase Using(T... t)
-    {
-        auto nest = std::make_shared<Nest>();
-        NestMutatorBase NestMutatorBase(nest);
-        return NestMutatorBase.Using(t...);
-    }
-
-    template <typename... T> 
-    LoopMutator ForAll(T... t)
-    {
-        auto nest = std::make_shared<Nest>();
-        NestMutatorBase NestMutatorBase(nest);
-        return NestMutatorBase.ForAll(t...);
-    }
+    NestMutatorBase Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data); // some of these args shold be const refeences
 }

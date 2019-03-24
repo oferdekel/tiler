@@ -42,7 +42,7 @@ namespace tiler
     class LoopStatement : public StatementBase
     {
     public:
-        LoopStatement(Variable indexVariable, int start, int stop, int step);
+        LoopStatement(const Variable& indexVariable, int start, int stop, int step);
 
         const Variable& GetStatementVariable() const override { return _indexVariable; }
 
@@ -68,16 +68,18 @@ namespace tiler
     class UsingStatement : public MatrixStatement
     {
     public:
-        UsingStatement(Matrix matrix);
+        UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data);
 
         const Variable& GetStatementVariable() const override { return _matrixVariable; }
 
         void Print(std::ostream& stream) const override;
 
-        const MatrixLayout& GetLayout() const override { return _matrixVariable; } 
+        const MatrixLayout& GetLayout() const override { return _matrixLayout; } 
 
     private:
-        Matrix _matrixVariable;
+        Variable _matrixVariable;
+        MatrixLayout _matrixLayout;
+        float* _data;
     };
 
     class TileStatement : public MatrixStatement
@@ -86,7 +88,7 @@ namespace tiler
         using StatementPtr = std::shared_ptr<StatementBase>;
         using MatrixStatementPtr = std::shared_ptr<MatrixStatement>;
 
-        TileStatement(Variable tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout);
+        TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout);
 
         const Variable& GetStatementVariable() const override { return _tileVariable; }
 
@@ -112,7 +114,7 @@ namespace tiler
     {
     public:
         using MatrixStatementPtr = std::shared_ptr<MatrixStatement>;
-        using KernelType = std::function<void(std::ostream&, const MatrixLayout&, const MatrixLayout&, const MatrixLayout&)>;
+        using KernelType = std::function<void(std::ostream&, const MatrixStatement&, const MatrixStatement&, const MatrixStatement&)>;
 
         KernelStatement(MatrixStatementPtr matrixAStatement, MatrixStatementPtr matrixBStatement, MatrixStatementPtr matrixCStatement, KernelType kernel);
 

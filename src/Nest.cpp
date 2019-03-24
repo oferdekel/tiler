@@ -21,18 +21,12 @@ namespace tiler
 
     void Nest::AddStatement(Nest::StatementPtr nestStatement)
     {
-        nestStatement->SetPosition(Size());
         _statements.push_back(nestStatement);
     }
 
     int Nest::Size() const 
     { 
         return (int)_statements.size(); 
-    }
-
-    StatementBase& Nest::Back() 
-    { 
-        return *(_statements.back()); 
     }
 
     void Nest::Print(std::ostream& stream)
@@ -89,7 +83,8 @@ namespace tiler
 
             if(IsPointerTo<LoopStatement>(statement))
             {
-                indentedStream << " {";
+                indentedStream << endl;
+                indentedStream << "{";
                 indentedStream.IncreaseIndent();
             }
 
@@ -111,11 +106,22 @@ namespace tiler
     NestMutatorBase::NestMutatorBase(std::shared_ptr<Nest> nest) : _nest(nest) 
     {}
 
-    NestMutatorBase NestMutatorBase::Using(Matrix matrix)
+    NestMutatorBase NestMutatorBase::Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data)
     {
-        auto statement = std::make_shared<UsingStatement>(matrix);
+        auto statement = std::make_shared<UsingStatement>(matrixVariable, matrixLayout, data);
         _nest->AddStatement(statement);
         return *this;
+    }
+
+    NestMutatorBase NestMutatorBase::Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel)
+    {
+        auto matrixAStatement = _nest->FindStatementByTypeAndVariable<MatrixStatement>(matrixAVariable);
+        auto matrixBStatement = _nest->FindStatementByTypeAndVariable<MatrixStatement>(matrixBVariable);
+        auto matrixCStatement = _nest->FindStatementByTypeAndVariable<MatrixStatement>(matrixCVariable);
+
+        auto kernelStatement = std::make_shared<KernelStatement>(matrixAStatement, matrixBStatement, matrixCStatement, kernel);
+        _nest->AddStatement(kernelStatement);
+        return *this; 
     }
 
     void NestMutatorBase::Print(std::ostream& stream) const
@@ -123,8 +129,12 @@ namespace tiler
         return _nest->Print(stream); 
     }
 
+    double LoopMutator::_loopCounter = 0;
+
     LoopMutator::LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopStatement> loop) : NestMutatorBase(nest), _loop(loop) 
-    {}
+    {
+        _loop->SetPosition(_loopCounter++);
+    }
 
     LoopMutator LoopMutator::Position(double Position) 
     { 
@@ -135,4 +145,10 @@ namespace tiler
     TileMutator::TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile) : NestMutatorBase(nest), _tile(tile) 
     {}
 
+    NestMutatorBase Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data)
+    {
+        auto nest = std::make_shared<Nest>();
+        NestMutatorBase NestMutatorBase(nest);
+        return NestMutatorBase.Using(matrixVariable, matrixLayout, data);
+    }
 }

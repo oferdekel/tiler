@@ -7,11 +7,11 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-#include "Matrix.h"
+#include "Statement.h"
 
 #include <iostream>
 
 namespace tiler
 {
-    void MMKernelRRR222(std::ostream& stream, const MatrixLayout& matrixA, const MatrixLayout& matrixB, const MatrixLayout& matrixC);
+    void MMKernelRRR222(std::ostream& stream, const MatrixStatement& matrixA, const MatrixStatement& matrixB, const MatrixStatement& matrixC);
 }

@@ -33,7 +33,7 @@ namespace tiler
         return stream;
     }
 
-    LoopStatement::LoopStatement(Variable indexVariable, int start, int stop, int step) : _indexVariable(indexVariable), _start(start), _stop(stop), _step(step) 
+    LoopStatement::LoopStatement(const Variable& indexVariable, int start, int stop, int step) : _indexVariable(indexVariable), _start(start), _stop(stop), _step(step) 
     {}
 
     void LoopStatement::Print(std::ostream& stream) const
@@ -50,10 +50,11 @@ namespace tiler
             << GetStatementVariable().GetName()
             << " += "
             << GetStep()
-            << ")";
+            << ")    // ForAll statement, position:"
+            << GetPosition();
     }
 
-    UsingStatement::UsingStatement(Matrix matrixVariable) : _matrixVariable(matrixVariable)
+    UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data) : _matrixVariable(matrixVariable), _matrixLayout(matrixLayout), _data(data)
     {}
 
     void UsingStatement::Print(std::ostream& stream) const
@@ -61,13 +62,24 @@ namespace tiler
         stream << "float " 
             << _matrixVariable.GetName() 
             << "["
-            << _matrixVariable.Size()
-            << "] = ";
-        _matrixVariable.PrintData(stream);
-        stream << ";";
+            << _matrixLayout.Size()
+            << "] = {"
+            << *_data;
+
+        for(int i=1; i<_matrixLayout.Size(); ++i)
+        {
+            stream << ", " << _data[i];
+        }
+
+        stream << "};    // Using statement, rows:"
+            << _matrixLayout.NumRows()
+            << ", cols:"
+            << _matrixLayout.NumColumns()
+            << ", order:"
+            << ((_matrixLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
     }
 
-    TileStatement::TileStatement(Variable tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)
+    TileStatement::TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)
         : _tileVariable(tileVariable), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement), _tileLayout(tileLayout)
     {}
 
@@ -99,6 +111,13 @@ namespace tiler
                 << matrixLayout.GetLeadingDimensionSize()
                 << ";";
         }
+
+        stream << "    // Tile statement, rows:"
+            << _tileLayout.NumRows()
+            << ", cols:"
+            << _tileLayout.NumColumns()
+            << ", order:"
+            << ((_tileLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
     }
 
     void TileStatement::SetPositionByDependencies()
@@ -113,7 +132,7 @@ namespace tiler
 
     void KernelStatement::Print(std::ostream& stream) const
     {
-        _kernel(stream, _matrixAStatement->GetLayout(), _matrixBStatement->GetLayout(), _matrixCStatement->GetLayout());
+        _kernel(stream, *_matrixAStatement, *_matrixBStatement, *_matrixCStatement);
     }
 
 }
