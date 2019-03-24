@@ -106,4 +106,14 @@ namespace tiler
         double position = std::max(_topStatement->GetPosition(), _leftStatement->GetPosition());
         SetPosition(position);
     }
+
+    KernelStatement::KernelStatement(MatrixStatementPtr matrixAStatement, MatrixStatementPtr matrixBStatement, MatrixStatementPtr matrixCStatement, KernelType kernel) 
+        : _matrixAStatement(matrixAStatement), _matrixBStatement(matrixBStatement), _matrixCStatement(matrixCStatement), _kernel(kernel)
+    {}
+
+    void KernelStatement::Print(std::ostream& stream) const
+    {
+        _kernel(stream, _matrixAStatement->GetLayout(), _matrixBStatement->GetLayout(), _matrixCStatement->GetLayout());
+    }
+
 }

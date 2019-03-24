@@ -6,6 +6,7 @@ set(target_name tiler)
 # files
 set(include
     include/IndentedOutputStream.h
+    include/Kernel.h
     include/Matrix.h
     include/Nest.h
     include/Statement.h
@@ -14,6 +15,7 @@ set(include
 
 set(src
     src/IndentedOutputStream.cpp
+    src/Kernel.cpp
     src/Main.cpp
     src/Matrix.cpp
     src/Nest.cpp

@@ -10,6 +10,7 @@
 #include "Variable.h"
 #include "Matrix.h"
 
+#include <functional>
 #include <iostream>
 #include <memory>
 
@@ -105,5 +106,24 @@ namespace tiler
         StatementPtr _topStatement;
         StatementPtr _leftStatement;
         MatrixLayout _tileLayout;
+    };
+
+    class KernelStatement : public StatementBase
+    {
+    public:
+        using MatrixStatementPtr = std::shared_ptr<MatrixStatement>;
+        using KernelType = std::function<void(std::ostream&, const MatrixLayout&, const MatrixLayout&, const MatrixLayout&)>;
+
+        KernelStatement(MatrixStatementPtr matrixAStatement, MatrixStatementPtr matrixBStatement, MatrixStatementPtr matrixCStatement, KernelType kernel);
+
+        const Variable& GetStatementVariable() const override { return _matrixCStatement->GetStatementVariable(); }
+
+        void Print(std::ostream& stream) const override;
+
+    private:
+        MatrixStatementPtr _matrixAStatement;
+        MatrixStatementPtr _matrixBStatement;
+        MatrixStatementPtr _matrixCStatement;
+        KernelType _kernel;
     };
 }

@@ -55,6 +55,8 @@ namespace tiler
 
         inline auto Tile(Variable tileVariable, Variable matrixVariable, Variable topVariable, Variable leftVariable, int numRows, int numColumns);
 
+        inline auto Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel);
+
         void Print(std::ostream& stream) const;
 
     protected:
@@ -132,6 +134,17 @@ namespace tiler
         auto tile = std::make_shared<TileStatement>(tileVariable, matrixStatement, topStatement, leftStatement, tileLayout);
         _nest->AddStatement(tile);
         return TileMutator(_nest, tile);
+    }
+
+    inline auto NestMutatorBase::Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel)
+    {
+        auto matrixAStatement = _nest->FindStatementByVariable<MatrixStatement>(matrixAVariable);
+        auto matrixBStatement = _nest->FindStatementByVariable<MatrixStatement>(matrixBVariable);
+        auto matrixCStatement = _nest->FindStatementByVariable<MatrixStatement>(matrixCVariable);
+
+        auto kernelStatement = std::make_shared<KernelStatement>(matrixAStatement, matrixBStatement, matrixCStatement, kernel);
+        _nest->AddStatement(kernelStatement);
+        return NestMutatorBase(_nest); // TODO this doesnt require auto!!
     }
 
     template <typename... T> 
