@@ -6,7 +6,7 @@ set(target_name tiler)
 # files
 set(include
     include/Kernel.h
-    include/Matrix.h
+    include/MatrixLayout.h
     include/Nest.h
     include/PrintUtils.h
     include/Statement.h
@@ -16,7 +16,7 @@ set(include
 set(src
     src/Kernel.cpp
     src/Main.cpp
-    src/Matrix.cpp
+    src/MatrixLayout.cpp
     src/Nest.cpp
     src/PrintUtils.cpp
     src/Statement.cpp

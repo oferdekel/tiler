@@ -9,7 +9,7 @@
 #include "PrintUtils.h"
 #include "Kernel.h"
 #include "Nest.h"
-#include "Matrix.h"
+#include "MatrixLayout.h"
 
 #include <iostream>
 #include <stdexcept>

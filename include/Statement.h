@@ -8,7 +8,7 @@
 #pragma once
 
 #include "Variable.h"
-#include "Matrix.h"
+#include "MatrixLayout.h"
 
 #include <functional>
 #include <iostream>

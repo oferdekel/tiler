@@ -8,7 +8,7 @@
 
 #include "PrintUtils.h"
 #include "Kernel.h"
-#include "Matrix.h"
+#include "MatrixLayout.h"
 
 #include <stdexcept>
 
