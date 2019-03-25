@@ -78,7 +78,7 @@ namespace tiler
         TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile);
 
         TileMutator Cache(MatrixOrder order);
-        
+
     private:
         std::shared_ptr<TileStatement> _tile;
     };
@@ -136,5 +136,5 @@ namespace tiler
         return TileMutator(_nest, tile);
     }
 
-    NestMutatorBase Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data); // some of these args shold be const refeences
+    NestMutatorBase MakeNest(); 
 }

@@ -41,13 +41,16 @@ int main(int argc, char** argv)
         Variable i, j, k;
         Variable A, B, C, AA, BB, CC;
 
-        Using(A, {4, 6, MatrixOrder::rowMajor}, u.data())
+        MakeNest()
+
+        .Using(A, {4, 6, MatrixOrder::rowMajor}, u.data())
         .Using(B, {6, 4, MatrixOrder::columnMajor}, v.data())
         .Using(C, {4, 4, MatrixOrder::rowMajor}, z.data())
+
         .ForAll(i, 0, 4, 2)
             .ForAll(j, 0, 4, 2)
                 .ForAll(k, 0, 6, 2)
-                    .Tile(AA, A, i, k, 2, 2)                     .Cache(MatrixOrder::rowMajor)
+                    .Tile(AA, A, i, k, 2, 2)                     
                     .Tile(BB, B, k, j, 2, 2)
                     .Tile(CC, C, i, j, 2, 2)
                     .Kernel(AA, BB, CC, MMKernel222)

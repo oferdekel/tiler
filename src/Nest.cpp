@@ -191,10 +191,9 @@ void copy(const float* source, float* target, int size, int count, int sourceSki
         return *this;
     }
 
-    NestMutatorBase Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data)
+    NestMutatorBase MakeNest()
     {
         auto nest = std::make_shared<Nest>();
-        NestMutatorBase NestMutatorBase(nest);
-        return NestMutatorBase.Using(matrixVariable, matrixLayout, data);
+        return NestMutatorBase(nest);
     }
 }
