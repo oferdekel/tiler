@@ -6,6 +6,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "Matrix.h"
 #include "Nest.h"
 #include "PrintUtils.h"
 
@@ -14,7 +15,7 @@
 namespace tiler
 {
     const char* copyFunction = R"AW(
-    void Copy(const float* source, float* target, int size, int count, int sourceSkip, int targetSkip)
+    void Copy(float* target, const float* source, int size, int count, int targetSkip, int sourceSkip)
     {
         for(int i=0; i<count; ++i)
         {
@@ -93,21 +94,13 @@ namespace tiler
         stream << "int main()" << endil << "{";
         IncreaseIndent();
 
-        // pre-sort pass 2 - allocate caches and set positions of tile statement
+        // pre-sort pass 2 - set positions of tile statement
         for(const auto& statement : _statements)
         {
             auto tileStatement = std::dynamic_pointer_cast<TileStatement>(statement);
             if(tileStatement != nullptr)
             {
                 tileStatement->SetPositionByDependencies();
-
-                if(tileStatement->IsCached())
-                {
-                    auto name = tileStatement->GetVariable().GetName();
-                    auto layout = tileStatement->GetLayout();
-                    stream << endil;
-                    PrintFormated(stream, "float %[%];    // Allocate cache, rows:%, columns:%, order:%\n", name, layout.Size(), layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
-                }
             }
         }
 
@@ -215,12 +208,18 @@ namespace tiler
     TileMutator::TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile) : NestMutatorBase(nest), _tile(tile) 
     {}
 
-    TileMutator TileMutator::Cache(MatrixOrder order)
+    NestMutatorBase TileMutator::Cache(MatrixOrder order)
     {
         _tile->SetCache(true);
-        auto layout = _tile->GetLayout();
-        _tile->GetLayout() = MatrixLayout{layout.NumRows(), layout.NumColumns(), order};
-        return *this;
+        MatrixLayout oldLayout = _tile->GetLayout();
+        MatrixLayout newLayout {oldLayout.NumRows(), oldLayout.NumColumns(), order};
+        _tile->GetLayout() = newLayout;
+
+        // add cache allocation
+        auto statement = std::make_shared<UsingStatement>(_tile->GetVariable(), newLayout, nullptr);
+        _nest->AddStatement(statement);
+
+        return NestMutatorBase(_nest);
     }
 
     NestMutatorBase MakeNest()

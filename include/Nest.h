@@ -77,7 +77,7 @@ namespace tiler
     public:
         TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile);
 
-        TileMutator Cache(MatrixOrder order);
+        NestMutatorBase Cache(MatrixOrder order);
 
     private:
         std::shared_ptr<TileStatement> _tile;

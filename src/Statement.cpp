@@ -53,14 +53,19 @@ namespace tiler
     {
         auto name = GetVariable().GetName();
         auto layout = GetLayout();
-        PrintFormated(stream, "float %[%] = {%", name, GetLayout().Size(), *_data);
+        PrintFormated(stream, "float %[%]", name, GetLayout().Size());
 
-        for(int i=1; i<GetLayout().Size(); ++i)
+        if(_data != nullptr)
         {
-            stream << ", " << _data[i];
+            stream << " = {" << *_data;
+            for(int i=1; i<GetLayout().Size(); ++i)
+            {
+                stream << ", " << _data[i];
+            }
+            stream << "}";
         }
 
-        PrintFormated(stream, "};    // Using statement, rows:%, cols:%, order:%\n", layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
+        PrintFormated(stream, ";    // Using statement, rows:%, cols:%, order:%\n", layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
     }
 
     TileStatement::TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)
