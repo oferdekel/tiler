@@ -60,9 +60,13 @@ namespace tiler
     class MatrixStatement : public StatementBase
     {
     public:
-        using StatementBase::StatementBase;
+        MatrixStatement(const Variable& variable, const MatrixLayout& matrixLayout);
 
-        virtual const MatrixLayout& GetLayout() const = 0;
+        MatrixLayout& GetLayout() { return _matrixLayout; } 
+        const MatrixLayout& GetLayout() const { return _matrixLayout; } 
+
+    private:
+        MatrixLayout _matrixLayout;
     };
 
     class UsingStatement : public MatrixStatement
@@ -72,10 +76,7 @@ namespace tiler
 
         void Print(std::ostream& stream) const override;
 
-        const MatrixLayout& GetLayout() const override { return _matrixLayout; } 
-
     private:
-        MatrixLayout _matrixLayout;
         float* _data;
     };
 
@@ -87,21 +88,22 @@ namespace tiler
 
         TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout);
 
-        const MatrixLayout& GetLayout() const override { return _tileLayout; } 
-
         void Print(std::ostream& stream) const override;
-
-        void SetPositionByDependencies();
 
         Variable GetMatrixVariable() const { return _matrixStatement -> GetVariable(); }
         Variable GetTopVariable() const { return _topStatement -> GetVariable(); }
         Variable GetLeftVariable() const { return _leftStatement -> GetVariable(); }
 
+        void SetPositionByDependencies();
+
+        void SetCache(bool cache) { _cache = cache; }
+        bool IsCached() const { return _cache; }
+
     private:
         MatrixStatementPtr _matrixStatement;
         StatementPtr _topStatement;
         StatementPtr _leftStatement;
-        MatrixLayout _tileLayout;
+        bool _cache = false;
     };
 
     class KernelStatement : public StatementBase

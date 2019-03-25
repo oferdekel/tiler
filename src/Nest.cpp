@@ -13,6 +13,18 @@
 
 namespace tiler
 {
+    const char* copyFunction = R"xxx(
+void copy(const float* source, float* target, int size, int count, int sourceSkip, int targetSkip)
+{
+    for(int i=0; i<count; ++i)
+    {
+        std::copy_n(source, size, target);
+        source += sourceSkip;
+        target += targetSkip;
+    }
+}
+)xxx";
+
     template<typename IsType, typename OrigType>
     bool IsPointerTo(const OrigType& pointer)
     {
@@ -31,6 +43,14 @@ namespace tiler
 
     void Nest::Print(std::ostream& stream)
     {
+
+        //print prefix
+        stream << copyFunction << endil;
+        stream << "int main()" 
+            << endil
+            << "{";
+        IncreaseIndent();
+
         // pre-sort pass
         for(const auto& statement : _statements)
         {
@@ -38,6 +58,23 @@ namespace tiler
             if(tileStatement != nullptr)
             {
                 tileStatement->SetPositionByDependencies();
+
+                if(tileStatement->IsCached())
+                {
+                    auto layout = tileStatement->GetLayout();
+                    stream << endil 
+                        << "float "
+                        << tileStatement->GetVariable().GetName()
+                        << "["
+                        << layout.Size()
+                        << "];    // Allocate cache, rows:"
+                        << layout.NumRows()
+                        << ", cols:"
+                        << layout.NumColumns()
+                        << ", order:"
+                        << ((layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
+                        << endil;
+                }
             }
         }
 
@@ -98,6 +135,10 @@ namespace tiler
                 stream << endil << "}";
             }
         }
+
+        //print prefix
+        DecreaseIndent();
+        stream << endil << "}";
     }
 
     NestMutatorBase::NestMutatorBase(std::shared_ptr<Nest> nest) : _nest(nest) 
@@ -141,6 +182,14 @@ namespace tiler
 
     TileMutator::TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile) : NestMutatorBase(nest), _tile(tile) 
     {}
+
+    TileMutator TileMutator::Cache(MatrixOrder order)
+    {
+        _tile->SetCache(true);
+        auto layout = _tile->GetLayout();
+        _tile->GetLayout() = MatrixLayout{layout.NumRows(), layout.NumColumns(), order};
+        return *this;
+    }
 
     NestMutatorBase Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data)
     {

@@ -33,6 +33,9 @@ namespace tiler
         return stream;
     }
 
+    MatrixStatement::MatrixStatement(const Variable& variable, const MatrixLayout& matrixLayout) : StatementBase(variable), _matrixLayout(matrixLayout)
+    {}
+
     LoopStatement::LoopStatement(const Variable& indexVariable, int start, int stop, int step) : StatementBase(indexVariable), _start(start), _stop(stop), _step(step) 
     {}
 
@@ -54,7 +57,7 @@ namespace tiler
             << GetPosition();
     }
 
-    UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data) : MatrixStatement(matrixVariable), _matrixLayout(matrixLayout), _data(data)
+    UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data) : MatrixStatement(matrixVariable, matrixLayout), _data(data)
     {}
 
     void UsingStatement::Print(std::ostream& stream) const
@@ -66,7 +69,7 @@ namespace tiler
             << "] = {"
             << *_data;
 
-        for(int i=1; i<_matrixLayout.Size(); ++i)
+        for(int i=1; i<GetLayout().Size(); ++i)
         {
             stream << ", " << _data[i];
         }
@@ -76,40 +79,61 @@ namespace tiler
             << ", cols:"
             << GetLayout().NumColumns()
             << ", order:"
-            << ((_matrixLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
+            << ((GetLayout().GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
             << std::endl;
     }
 
     TileStatement::TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)
-        : MatrixStatement(tileVariable), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement), _tileLayout(tileLayout)
+        : MatrixStatement(tileVariable, tileLayout), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement)
     {}
 
     void TileStatement::Print(std::ostream& stream) const
     {
-        stream << "float* "
-            << GetVariable().GetName()
-            << " = "
-            << GetMatrixVariable().GetName()
-            << " + ";
-
+        // abreviations
         auto matrixLayout = _matrixStatement->GetLayout();
+        auto tileLayout = GetLayout();
+
+        // construct string that represents the source location in memory
+        std::string source = _matrixStatement->GetVariable().GetName() + " + " + GetTopVariable().GetName();
 
         if(matrixLayout.GetOrder() == MatrixOrder::rowMajor)
         {
-            stream << GetTopVariable().GetName()
-                << " * "
-                << matrixLayout.GetLeadingDimensionSize()
-                << " + "
-                << GetLeftVariable().GetName()
-                << ";";
+            source +=  " * " + std::to_string(matrixLayout.GetLeadingDimensionSize()) + " + " + GetLeftVariable().GetName();
         }
         else
         {
-            stream << GetTopVariable().GetName()
-                << " + "
-                << GetLeftVariable().GetName()
-                << " * "
-                << matrixLayout.GetLeadingDimensionSize()
+            source += GetLeftVariable().GetName() + " * " + std::to_string(matrixLayout.GetLeadingDimensionSize());
+        }
+
+        if(IsCached())
+        { 
+            if(tileLayout.GetOrder() == matrixLayout.GetOrder())
+            {
+                stream << "copy("
+                    << source
+                    << ", "
+                    << GetVariable().GetName()
+                    << ", "
+                    << tileLayout.GetMinorSize()
+                    << ", "
+                    << tileLayout.GetMajorSize()
+                    << ", "
+                    << matrixLayout.GetLeadingDimensionSize()
+                    << ", "
+                    << tileLayout.GetLeadingDimensionSize()
+                    << ");";
+            }
+            else
+            {
+                throw std::logic_error("not yet implemented");
+            }
+        }
+        else
+        {
+            stream << "float* "
+                << GetVariable().GetName()
+                << " = "
+                << source
                 << ";";
         }
 
@@ -118,7 +142,9 @@ namespace tiler
             << ", cols:"
             << GetLayout().NumColumns()
             << ", order:"
-            << ((GetLayout().GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
+            << ((GetLayout().GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
+            << ", cached:"
+            << (IsCached() ? "true" : "false");
     }
 
     void TileStatement::SetPositionByDependencies()
