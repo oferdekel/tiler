@@ -13,17 +13,30 @@
 
 namespace tiler
 {
-    const char* copyFunction = R"xxx(
-void copy(const float* source, float* target, int size, int count, int sourceSkip, int targetSkip)
-{
-    for(int i=0; i<count; ++i)
+    const char* copyFunction = R"AW(
+    void Copy(const float* source, float* target, int size, int count, int sourceSkip, int targetSkip)
     {
-        std::copy_n(source, size, target);
-        source += sourceSkip;
-        target += targetSkip;
+        for(int i=0; i<count; ++i)
+        {
+            std::copy_n(source, size, target);
+            source += sourceSkip;
+            target += targetSkip;
+        }
     }
-}
-)xxx";
+    )AW";
+
+    const char* copyTransposeFunction = R"AW(
+    void CopyTranspose(const float* source, float* target, int size, int count, int sourceSkip, int targetSkip)
+    {
+        for(int i=0; i<count; ++i)
+        {
+            for(int j=0; j<size; ++j)
+            {
+                target[i * sourceSkip + j] = source[i + j * targetSkip];
+            }
+        }
+    }
+    )AW";
 
     template<typename IsType, typename OrigType>
     bool IsPointerTo(const OrigType& pointer)
@@ -43,13 +56,44 @@ void copy(const float* source, float* target, int size, int count, int sourceSki
 
     void Nest::Print(std::ostream& stream)
     {
+        IncreaseIndent();
 
-        //print prefix
-        stream << copyFunction << endil;
+        // pre-sort pass 1 - identify required functions
+        bool requiresCopy = false;
+        bool requiresCopyTranspose = false;
+        for(const auto& statement : _statements)
+        {
+            auto tileStatement = std::dynamic_pointer_cast<TileStatement>(statement);
+            if(tileStatement != nullptr)
+            {
+                if(tileStatement->IsCached())
+                {
+                    if(tileStatement->IsTransposed())
+                    {
+                        requiresCopyTranspose = true;
+                    }
+                    else
+                    {
+                        requiresCopy = true;
+                    }
+                }
+            }
+        }
+
+        if(requiresCopy)
+        {
+            stream << copyFunction << endil;
+        }
+        if(requiresCopyTranspose)
+        {
+            stream << copyTransposeFunction << endil;
+        }
+
+        // start main function
         stream << "int main()" << endil << "{";
         IncreaseIndent();
 
-        // pre-sort pass
+        // pre-sort pass 2 - allocate caches and set positions of tile statement
         for(const auto& statement : _statements)
         {
             auto tileStatement = std::dynamic_pointer_cast<TileStatement>(statement);
@@ -67,7 +111,7 @@ void copy(const float* source, float* target, int size, int count, int sourceSki
             }
         }
 
-        // sort the statements
+        // sort the statements by position
         auto comparer = [](const StatementPtr& a, const StatementPtr& b) 
         {
             // using statements are always before other statements
@@ -95,7 +139,6 @@ void copy(const float* source, float* target, int size, int count, int sourceSki
                 }
             }
 
-            // otherwise, sort by position
             return a->GetPosition() < b->GetPosition();
         };
         std::sort(_statements.begin(), _statements.end(), comparer);

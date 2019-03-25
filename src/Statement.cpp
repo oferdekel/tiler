@@ -89,11 +89,11 @@ namespace tiler
         { 
             if(tileLayout.GetOrder() == matrixLayout.GetOrder())
             {
-                PrintFormated(stream, "copy(%, %, %, %, %, %);", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
+                PrintFormated(stream, "Copy(%, %, %, %, %, %);", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
             }
             else
             {
-                throw std::logic_error("not yet implemented");
+                PrintFormated(stream, "CopyTranspose(%, %, %, %, %, %);", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
             }
         }
         else

@@ -99,6 +99,8 @@ namespace tiler
         void SetCache(bool cache) { _cache = cache; }
         bool IsCached() const { return _cache; }
 
+        bool IsTransposed() const { return _matrixStatement->GetLayout().GetOrder() != GetLayout().GetOrder(); }
+
     private:
         MatrixStatementPtr _matrixStatement;
         StatementPtr _topStatement;
