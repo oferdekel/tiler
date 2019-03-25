@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "Nest.h"
-#include "IndentedOutputStream.h"
+#include "PrintUtils.h"
 
 #include <algorithm>
 
@@ -46,9 +46,7 @@ void copy(const float* source, float* target, int size, int count, int sourceSki
 
         //print prefix
         stream << copyFunction << endil;
-        stream << "int main()" 
-            << endil
-            << "{";
+        stream << "int main()" << endil << "{";
         IncreaseIndent();
 
         // pre-sort pass
@@ -61,19 +59,10 @@ void copy(const float* source, float* target, int size, int count, int sourceSki
 
                 if(tileStatement->IsCached())
                 {
+                    auto name = tileStatement->GetVariable().GetName();
                     auto layout = tileStatement->GetLayout();
-                    stream << endil 
-                        << "float "
-                        << tileStatement->GetVariable().GetName()
-                        << "["
-                        << layout.Size()
-                        << "];    // Allocate cache, rows:"
-                        << layout.NumRows()
-                        << ", cols:"
-                        << layout.NumColumns()
-                        << ", order:"
-                        << ((layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
-                        << endil;
+                    stream << endil;
+                    PrintFormated(stream, "float %[%];    // Allocate cache, rows:%, columns:%, order:%\n", name, layout.Size(), layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
                 }
             }
         }

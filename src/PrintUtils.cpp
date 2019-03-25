@@ -1,18 +1,17 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 //  Project:  tiler
-//  File:     IndentedOutputStream.cpp
+//  File:     PrintUtils.cpp
 //  Authors:  Ofer Dekel
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "IndentedOutputStream.h"
+#include "PrintUtils.h"
 
 
 namespace tiler
 {
     int globalIndentLevel = 0;
-
 
     std::ostream& endil(std::ostream& stream)
     {
@@ -21,6 +20,22 @@ namespace tiler
         return stream;
     }
  
-    void IncreaseIndent() { globalIndentLevel++; }
-    void DecreaseIndent() { globalIndentLevel--; }
+    void IncreaseIndent() 
+    { 
+        globalIndentLevel++; 
+    }  
+    
+    void DecreaseIndent() 
+    { 
+        globalIndentLevel--; 
+    }
+
+    void PrintFormated(std::ostream& os, const char* format)
+    {
+        while (*format != '\0')
+        {
+            os << *format;
+            ++format;
+        }
+    }
 }

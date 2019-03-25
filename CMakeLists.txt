@@ -5,20 +5,20 @@ set(target_name tiler)
 
 # files
 set(include
-    include/IndentedOutputStream.h
     include/Kernel.h
     include/Matrix.h
     include/Nest.h
+    include/PrintUtils.h
     include/Statement.h
     include/Variable.h
 )
 
 set(src
-    src/IndentedOutputStream.cpp
     src/Kernel.cpp
     src/Main.cpp
     src/Matrix.cpp
     src/Nest.cpp
+    src/PrintUtils.cpp
     src/Statement.cpp
     src/Variable.cpp
 )

@@ -6,6 +6,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "PrintUtils.h"
 #include "Statement.h"
 
 #include <algorithm>
@@ -41,20 +42,8 @@ namespace tiler
 
     void LoopStatement::Print(std::ostream& stream) const
     {
-        stream << "for(int " 
-            << GetVariable().GetName()
-            << " = " 
-            << GetStart() 
-            << "; " 
-            << GetVariable().GetName()
-            << " < " 
-            << GetStop()
-            << "; "
-            << GetVariable().GetName()
-            << " += "
-            << GetStep()
-            << ")    // ForAll statement, position:"
-            << GetPosition();
+        auto name = GetVariable().GetName();
+        PrintFormated(stream, "for(int % = %; % < %; % += %)    // ForAll statement, position:%", name, GetStart(), name, GetStop(), name, GetStep(), GetPosition());
     }
 
     UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data) : MatrixStatement(matrixVariable, matrixLayout), _data(data)
@@ -62,25 +51,16 @@ namespace tiler
 
     void UsingStatement::Print(std::ostream& stream) const
     {
-        stream << "float " 
-            << GetVariable().GetName() 
-            << "["
-            << GetLayout().Size()
-            << "] = {"
-            << *_data;
+        auto name = GetVariable().GetName();
+        auto layout = GetLayout();
+        PrintFormated(stream, "float %[%] = {%", name, GetLayout().Size(), *_data);
 
         for(int i=1; i<GetLayout().Size(); ++i)
         {
             stream << ", " << _data[i];
         }
 
-        stream << "};    // Using statement, rows:"
-            << GetLayout().NumRows()
-            << ", cols:"
-            << GetLayout().NumColumns()
-            << ", order:"
-            << ((GetLayout().GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
-            << std::endl;
+        PrintFormated(stream, "};    // Using statement, rows:%, cols:%, order:%\n", layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
     }
 
     TileStatement::TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)
@@ -89,7 +69,7 @@ namespace tiler
 
     void TileStatement::Print(std::ostream& stream) const
     {
-        // abreviations
+        auto name = GetVariable().GetName();
         auto matrixLayout = _matrixStatement->GetLayout();
         auto tileLayout = GetLayout();
 
@@ -109,19 +89,7 @@ namespace tiler
         { 
             if(tileLayout.GetOrder() == matrixLayout.GetOrder())
             {
-                stream << "copy("
-                    << source
-                    << ", "
-                    << GetVariable().GetName()
-                    << ", "
-                    << tileLayout.GetMinorSize()
-                    << ", "
-                    << tileLayout.GetMajorSize()
-                    << ", "
-                    << matrixLayout.GetLeadingDimensionSize()
-                    << ", "
-                    << tileLayout.GetLeadingDimensionSize()
-                    << ");";
+                PrintFormated(stream, "copy(%, %, %, %, %, %);", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
             }
             else
             {
@@ -130,21 +98,10 @@ namespace tiler
         }
         else
         {
-            stream << "float* "
-                << GetVariable().GetName()
-                << " = "
-                << source
-                << ";";
+            PrintFormated(stream, "float* % = %;", name, source);
         }
 
-        stream << "    // Tile statement, rows:"
-            << GetLayout().NumRows()
-            << ", cols:"
-            << GetLayout().NumColumns()
-            << ", order:"
-            << ((GetLayout().GetOrder() == MatrixOrder::rowMajor) ? "row" : "column")
-            << ", cached:"
-            << (IsCached() ? "true" : "false");
+        PrintFormated(stream, "    // Tile statement, rows:%, columns:%, order:%, cached:%", tileLayout.NumRows(), tileLayout.NumColumns(), (tileLayout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column", IsCached() ? "true" : "false");
     }
 
     void TileStatement::SetPositionByDependencies()
