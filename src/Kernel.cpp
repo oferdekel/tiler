@@ -41,13 +41,14 @@ namespace tiler
         auto B = matrixB.GetVariable().GetName();
         auto C = matrixC.GetVariable().GetName();
 
-        stream << endil << "// matrix-matrix multiplication kernel with three 2x2 matrices" << endil;
-        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));", C, c(0,0), A, a(0,0), B, b(0,0), A, a(0,1), B, b(1,0));
-        stream << endil;
-        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));", C, c(0,1), A, a(0,0), B, b(0,1), A, a(0,1), B, b(1,1));
-        stream << endil;
-        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));", C, c(1,0), A, a(1,0), B, b(0,0), A, a(1,1), B, b(1,0));
-        stream << endil;
-        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));", C, c(1,1), A, a(1,0), B, b(0,1), A, a(1,1), B, b(1,1));
+        stream << std::endl << Indent << "// matrix-matrix multiplication kernel with three 2x2 matrices\n";
+        stream << Indent;
+        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));\n", C, c(0,0), A, a(0,0), B, b(0,0), A, a(0,1), B, b(1,0));
+        stream << Indent;
+        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));\n", C, c(0,1), A, a(0,0), B, b(0,1), A, a(0,1), B, b(1,1));
+        stream << Indent;
+        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));\n", C, c(1,0), A, a(1,0), B, b(0,0), A, a(1,1), B, b(1,0));
+        stream << Indent;
+        PrintFormated(stream, "(*(%+%)) += (*(%+%)) * (*(%+%)) + (*(%+%)) * (*(%+%));\n\n", C, c(1,1), A, a(1,0), B, b(0,1), A, a(1,1), B, b(1,1));
     } 
 }

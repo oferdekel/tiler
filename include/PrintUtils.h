@@ -14,7 +14,7 @@
 namespace tiler
 {
     // Stream mutator for indented new-line (use like std::endl)
-    std::ostream& endil(std::ostream& stream);
+    std::ostream& Indent(std::ostream& stream);
 
     // Increases the global indent value for indented printing
     void IncreaseIndent();

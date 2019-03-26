@@ -26,7 +26,7 @@ namespace tiler
     )AW";
 
     const char* copyTransposeFunction = R"AW(
-    void CopyTranspose(const float* source, float* target, int size, int count, int sourceSkip, int targetSkip)
+    void CopyTranspose(float* target, const float* source, int size, int count, int targetSkip, int sourceSkip)
     {
         for(int i=0; i<count; ++i)
         {
@@ -82,15 +82,15 @@ namespace tiler
 
         if(requiresCopy)
         {
-            stream << copyFunction << endil;
+            stream << copyFunction << std::endl;
         }
         if(requiresCopyTranspose)
         {
-            stream << copyTransposeFunction << endil;
+            stream << copyTransposeFunction << std::endl;
         }
 
         // start main function
-        stream << "int main()" << endil << "{";
+        stream << Indent << "int main()\n" << Indent << "{\n";
         IncreaseIndent();
 
         // pre-sort pass 2 - set positions of tile statement
@@ -138,31 +138,19 @@ namespace tiler
         // post-sort forward pass
         for(const auto& statement : _statements)
         {
-            stream << endil;
-            stream << *statement;
-
-            if(IsPointerTo<ForAllStatement>(statement))
-            {
-                stream << endil;
-                stream << "{";
-                IncreaseIndent();
-            }
+            statement->PrintForward(stream);
         }
 
         // backwards pass
         std::reverse(_statements.begin(), _statements.end());
         for(const auto& statement : _statements)
         {
-            if(IsPointerTo<ForAllStatement>(statement))
-            {
-                DecreaseIndent();
-                stream << endil << "}";
-            }
+            statement->PrintBackward(stream);
         }
 
         //print prefix
         DecreaseIndent();
-        stream << endil << "}";
+        stream << Indent << "}";
     }
 
     NestStatementAppender::NestStatementAppender(std::shared_ptr<Nest> nest) : _nest(nest) 

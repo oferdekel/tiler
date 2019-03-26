@@ -52,7 +52,7 @@ int main(int argc, char** argv)
                 .ForAll(k, 0, 6, 2)                         .Position(0.5)
                     .Tile(AA, A, i, k, 2, 2)                .Cache(MatrixOrder::columnMajor)  
                     .Tile(BB, B, k, j, 2, 2)                .Cache(MatrixOrder::rowMajor)
-                    .Tile(CC, C, i, j, 2, 2)
+                    .Tile(CC, C, i, j, 2, 2)                .Cache(MatrixOrder::rowMajor)
                     .Kernel(AA, BB, CC, MMKernel222)
 
         .Print(std::cout);

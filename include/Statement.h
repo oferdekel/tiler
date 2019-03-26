@@ -27,8 +27,9 @@ namespace tiler
         // Returns the variable defined by the statement
         const Variable& GetVariable() const { return _variable; }
 
-        // Pure virtual function for printing the statement
-        virtual void Print(std::ostream& stream) const = 0;
+        // Virtual function for printing the statement during the forward and backward passes
+        virtual void PrintForward(std::ostream& stream) const = 0;
+        virtual void PrintBackward(std::ostream& stream) const {}
 
         // Get and set the statement position
         double GetPosition() const { return _position; }
@@ -40,7 +41,7 @@ namespace tiler
         double _position = 0;
     };
 
-    // Prints a statement to a stream by calling its Print() member
+    // Prints a statement to a stream by calling its PrintForward() member
     std::ostream& operator<<(std::ostream& stream, const StatementBase& statement);
 
     // ForAll statements
@@ -51,7 +52,8 @@ namespace tiler
         ForAllStatement(const Variable& indexVariable, int start, int stop, int step);
 
         // Prints the statement
-        void Print(std::ostream& stream) const override;
+        void PrintForward(std::ostream& stream) const override;
+        void PrintBackward(std::ostream& stream) const override;
 
         int GetStart() const { return _start; }
         int GetStop() const { return _stop; }
@@ -91,7 +93,7 @@ namespace tiler
         UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, bool isOutput, float* data);
 
         // Prints the statement
-        void Print(std::ostream& stream) const override;
+        void PrintForward(std::ostream& stream) const override;
 
     private:
         float* _data;
@@ -109,7 +111,8 @@ namespace tiler
         TileStatement(const Variable& tileVariable, MatrixLayout tileLayout, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement);
 
         // Prints the statement
-        void Print(std::ostream& stream) const override;
+        void PrintForward(std::ostream& stream) const override;
+        void PrintBackward(std::ostream& stream) const override;
 
         // Sets the position of this statement to be the maximum of its dependencies
         void SetPositionByDependencies();
@@ -140,7 +143,7 @@ namespace tiler
         KernelStatement(MatrixStatementPtr matrixAStatement, MatrixStatementPtr matrixBStatement, MatrixStatementPtr matrixCStatement, KernelType kernel);
 
         // Prints the statement
-        void Print(std::ostream& stream) const override;
+        void PrintForward(std::ostream& stream) const override;
 
     private:
         MatrixStatementPtr _matrixAStatement;
