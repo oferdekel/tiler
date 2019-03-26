@@ -23,30 +23,25 @@ namespace tiler
         _position = Position; 
     }
 
-    double StatementBase::GetPosition() const 
-    { 
-        return _position; 
-    }
-
     std::ostream& operator<<(std::ostream& stream, const StatementBase& statement)
     {
         statement.Print(stream);
         return stream;
     }
 
-    MatrixStatement::MatrixStatement(const Variable& variable, const MatrixLayout& matrixLayout) : StatementBase(variable), _matrixLayout(matrixLayout)
+    MatrixStatement::MatrixStatement(const Variable& variable, const MatrixLayout& matrixLayout, bool isOutput) : StatementBase(variable), _matrixLayout(matrixLayout), _isOutput(isOutput)
     {}
 
-    LoopStatement::LoopStatement(const Variable& indexVariable, int start, int stop, int step) : StatementBase(indexVariable), _start(start), _stop(stop), _step(step) 
+    ForAllStatement::ForAllStatement(const Variable& indexVariable, int start, int stop, int step) : StatementBase(indexVariable), _start(start), _stop(stop), _step(step) 
     {}
 
-    void LoopStatement::Print(std::ostream& stream) const
+    void ForAllStatement::Print(std::ostream& stream) const
     {
         auto name = GetVariable().GetName();
         PrintFormated(stream, "for(int % = %; % < %; % += %)    // ForAll statement, position:%", name, GetStart(), name, GetStop(), name, GetStep(), GetPosition());
     }
 
-    UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data) : MatrixStatement(matrixVariable, matrixLayout), _data(data)
+    UsingStatement::UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, bool isOutput, float* data) : MatrixStatement(matrixVariable, matrixLayout, isOutput), _data(data)
     {}
 
     void UsingStatement::Print(std::ostream& stream) const
@@ -68,8 +63,8 @@ namespace tiler
         PrintFormated(stream, ";    // Using statement, rows:%, cols:%, order:%\n", layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column");
     }
 
-    TileStatement::TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout)
-        : MatrixStatement(tileVariable, tileLayout), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement)
+    TileStatement::TileStatement(const Variable& tileVariable, MatrixLayout tileLayout, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement)
+        : MatrixStatement(tileVariable, tileLayout, matrixStatement->IsOutput()), _matrixStatement(matrixStatement), _topStatement(topStatement), _leftStatement(leftStatement)
     {}
 
     void TileStatement::Print(std::ostream& stream) const
@@ -79,15 +74,15 @@ namespace tiler
         auto tileLayout = GetLayout();
 
         // construct string that represents the source location in memory
-        std::string source = _matrixStatement->GetVariable().GetName() + " + " + GetTopVariable().GetName();
+        std::string source = _matrixStatement->GetVariable().GetName() + " + " + _topStatement->GetVariable().GetName();
 
         if(matrixLayout.GetOrder() == MatrixOrder::rowMajor)
         {
-            source +=  " * " + std::to_string(matrixLayout.GetLeadingDimensionSize()) + " + " + GetLeftVariable().GetName();
+            source +=  " * " + std::to_string(matrixLayout.GetLeadingDimensionSize()) + " + " + _leftStatement->GetVariable().GetName();
         }
         else
         {
-            source += GetLeftVariable().GetName() + " * " + std::to_string(matrixLayout.GetLeadingDimensionSize());
+            source += _leftStatement->GetVariable().GetName() + " * " + std::to_string(matrixLayout.GetLeadingDimensionSize());
         }
 
         if(IsCached())

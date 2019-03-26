@@ -19,6 +19,21 @@ namespace  tiler
     MatrixLayout::MatrixLayout(int numRows, int numColumns, MatrixOrder order) : _numRows(numRows), _numColumns(numColumns), _order(order), _leadingDimensionSize((order == MatrixOrder::rowMajor) ? numColumns : numRows)
     {}
 
+    int MatrixLayout::Size() const 
+    { 
+        return _numRows * _numColumns; 
+    }
+    
+    int MatrixLayout::GetMajorSize() const 
+    { 
+        return (_order == MatrixOrder::rowMajor) ? _numRows : _numColumns; 
+    }
+    
+    int MatrixLayout::GetMinorSize() const 
+    { 
+        return (_order == MatrixOrder::columnMajor) ? _numRows : _numColumns; 
+    }
+
     int MatrixLayout::operator()(int row, int column) const
     {
         if(_order == MatrixOrder::rowMajor)

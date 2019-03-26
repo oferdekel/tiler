@@ -43,13 +43,13 @@ int main(int argc, char** argv)
 
         MakeNest()
 
-        .Using(A, {4, 6, MatrixOrder::rowMajor}, u.data())
-        .Using(B, {6, 4, MatrixOrder::rowMajor}, v.data())
-        .Using(C, {4, 4, MatrixOrder::rowMajor}, z.data())
+        .Using(A, {4, 6, MatrixOrder::rowMajor}, false, u.data())
+        .Using(B, {6, 4, MatrixOrder::rowMajor}, false, v.data())
+        .Using(C, {4, 4, MatrixOrder::rowMajor}, true, z.data())
 
         .ForAll(i, 0, 4, 2)
             .ForAll(j, 0, 4, 2)
-                .ForAll(k, 0, 6, 2)                         .Position(-1)
+                .ForAll(k, 0, 6, 2)                         .Position(0.5)
                     .Tile(AA, A, i, k, 2, 2)                .Cache(MatrixOrder::columnMajor)  
                     .Tile(BB, B, k, j, 2, 2)                .Cache(MatrixOrder::rowMajor)
                     .Tile(CC, C, i, j, 2, 2)

@@ -13,35 +13,21 @@
 
 namespace tiler
 {
-    // An index for a forall loop
+    // Represents a variable (loop index, matrix, etc) in a loop nest
     class Variable
     {
     public:
-        // constructs a variable
+        // Constructs a variable
         Variable();
 
-        // equality to another variable 
+        // Determines equality to another variable 
         bool operator==(const Variable& other) const;
 
-        // returns the ID of the variable
-        int GetID() const { return _id; }
-
-        // returns the variable name
+        // Returns the variable name
         std::string GetName() const { return "v" + std::to_string(_id); }
 
     protected:
         static int _counter;
         int _id;
-    };
-}
-
-namespace std {
-    template<>
-    struct hash<tiler::Variable>
-    {
-        std::size_t operator()(const tiler::Variable& variable) const noexcept
-        {
-            return variable.GetID();
-        }
     };
 }

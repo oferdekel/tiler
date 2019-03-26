@@ -14,21 +14,24 @@ namespace tiler
 {
     enum class MatrixOrder { rowMajor, columnMajor };
 
+    // represents the layout of a matrix (size, order, etc)
     class MatrixLayout
     {
     public:
+        // Constructors
         MatrixLayout(int numRows, int numColumns, MatrixOrder order, int leadingDimensionSize);
         MatrixLayout(int numRows, int numColumns, MatrixOrder order);
 
+        // Access layout parameters
         int NumRows() const { return _numRows; }
         int NumColumns() const { return _numColumns; }
-        int Size() const { return _numRows * _numColumns; }
-        int GetLeadingDimensionSize() const { return _leadingDimensionSize; }
-        int GetMajorSize() const { return (_order == MatrixOrder::rowMajor) ? _numRows : _numColumns; }
-        int GetMinorSize() const { return (_order == MatrixOrder::columnMajor) ? _numRows : _numColumns; }
-        
         MatrixOrder GetOrder() const { return _order; }
-        void SetOrder(MatrixOrder order) { _order = order; }
+        int GetLeadingDimensionSize() const { return _leadingDimensionSize; }
+        int Size() const;
+        int GetMajorSize() const;
+        int GetMinorSize() const;
+
+        // Calculates the offset of a matrix element
         int operator()(int row, int column) const;
 
     private:

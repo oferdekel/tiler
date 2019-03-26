@@ -16,20 +16,23 @@
 
 namespace tiler
 {
-    // Generic element of a nest
+    // Base class for nested statements
     class StatementBase
     {
     public:
+        // Constructor and virtual destructor
         StatementBase(const Variable& variable);
         virtual ~StatementBase() = default;
 
+        // Returns the variable defined by the statement
         const Variable& GetVariable() const { return _variable; }
 
+        // Pure virtual function for printing the statement
         virtual void Print(std::ostream& stream) const = 0;
 
+        // Get and set the statement position
+        double GetPosition() const { return _position; }
         void SetPosition(double position);
-
-        double GetPosition() const;
 
     private:
         Variable _variable; 
@@ -37,14 +40,17 @@ namespace tiler
         double _position = 0;
     };
 
-    // Prints a loop declaration to a stream
+    // Prints a statement to a stream by calling its Print() member
     std::ostream& operator<<(std::ostream& stream, const StatementBase& statement);
 
-    class LoopStatement : public StatementBase
+    // ForAll statements
+    class ForAllStatement : public StatementBase
     {
     public:
-        LoopStatement(const Variable& indexVariable, int start, int stop, int step);
+        // Constructor
+        ForAllStatement(const Variable& indexVariable, int start, int stop, int step);
 
+        // Prints the statement
         void Print(std::ostream& stream) const override;
 
         int GetStart() const { return _start; }
@@ -57,48 +63,62 @@ namespace tiler
         int _step;
     };
 
+    // Base class for Matrix statement (Using, Tile)
     class MatrixStatement : public StatementBase
     {
     public:
-        MatrixStatement(const Variable& variable, const MatrixLayout& matrixLayout);
+        // Constructor
+        MatrixStatement(const Variable& variable, const MatrixLayout& matrixLayout, bool isOutput);
 
+        // Access the matrix layout
         MatrixLayout& GetLayout() { return _matrixLayout; } 
         const MatrixLayout& GetLayout() const { return _matrixLayout; } 
 
+        // Determines if the matrix is an output matrix
+        bool IsOutput() const { return _isOutput; }
+        void SetOutput(bool output = true) { _isOutput = output; }
+
     private:
         MatrixLayout _matrixLayout;
+        bool _isOutput;
     };
 
+    // Using statements
     class UsingStatement : public MatrixStatement
     {
     public:
-        UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, float* data);
+        // Constructor
+        UsingStatement(const Variable& matrixVariable, MatrixLayout matrixLayout, bool isOutput, float* data);
 
+        // Prints the statement
         void Print(std::ostream& stream) const override;
 
     private:
         float* _data;
     };
 
+    // Tile statements
     class TileStatement : public MatrixStatement
     {
     public:
+        // Abbreviations
         using StatementPtr = std::shared_ptr<StatementBase>;
         using MatrixStatementPtr = std::shared_ptr<MatrixStatement>;
 
-        TileStatement(const Variable& tileVariable, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement, MatrixLayout tileLayout);
+        // Constructor
+        TileStatement(const Variable& tileVariable, MatrixLayout tileLayout, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement);
 
+        // Prints the statement
         void Print(std::ostream& stream) const override;
 
-        Variable GetMatrixVariable() const { return _matrixStatement -> GetVariable(); }
-        Variable GetTopVariable() const { return _topStatement -> GetVariable(); }
-        Variable GetLeftVariable() const { return _leftStatement -> GetVariable(); }
-
+        // Sets the position of this statement to be the maximum of its dependencies
         void SetPositionByDependencies();
 
-        void SetCache(bool cache) { _cache = cache; }
+        // Set the cache flag
+        void SetCache(bool cache = true) { _cache = cache; }
         bool IsCached() const { return _cache; }
 
+        // Determines if the tile is transposed with repsect to the original data
         bool IsTransposed() const { return _matrixStatement->GetLayout().GetOrder() != GetLayout().GetOrder(); }
 
     private:
@@ -108,14 +128,18 @@ namespace tiler
         bool _cache = false;
     };
 
+    // Kernel statements
     class KernelStatement : public StatementBase
     {
     public:
+        // Abbreviations
         using MatrixStatementPtr = std::shared_ptr<MatrixStatement>;
         using KernelType = std::function<void(std::ostream&, const MatrixStatement&, const MatrixStatement&, const MatrixStatement&)>;
 
+        // Constructor
         KernelStatement(MatrixStatementPtr matrixAStatement, MatrixStatementPtr matrixBStatement, MatrixStatementPtr matrixCStatement, KernelType kernel);
 
+        // Prints the statement
         void Print(std::ostream& stream) const override;
 
     private:

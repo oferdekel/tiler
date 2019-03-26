@@ -13,18 +13,21 @@
 
 namespace tiler
 {
+    // Stream mutator for indented new-line (use like std::endl)
     std::ostream& endil(std::ostream& stream);
 
+    // Increases the global indent value for indented printing
     void IncreaseIndent();
 
+    // Decreases the global indent value for indented printing
     void DecreaseIndent();
 
-    const char substitutionSymbol = '%';
-
+    // Formatted printing (like printf)
     template <typename ArgType, typename... ArgTypes>
     void PrintFormated(std::ostream& os, const char* format, const ArgType& arg, const ArgTypes&... args);
 
-    void PrintFormated(std::ostream& os, const char* format);
+    // Substitution symbol for PrintFormat calls
+    const char substitutionSymbol = '%';
 
     //
     //
@@ -52,4 +55,7 @@ namespace tiler
 
         PrintFormated(os, format, args...);
     }
+
+    // internal
+    void PrintFormated(std::ostream& os, const char* format);
 }

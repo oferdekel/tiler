@@ -120,12 +120,12 @@ namespace tiler
             // ties are broken such that tile statements are last
             if (a->GetPosition() == b->GetPosition())
             {
-                if(IsPointerTo<LoopStatement>(a) && IsPointerTo<TileStatement>(b))
+                if(IsPointerTo<ForAllStatement>(a) && IsPointerTo<TileStatement>(b))
                 {
                     return true;
                 }
 
-                if(IsPointerTo<LoopStatement>(b) && IsPointerTo<TileStatement>(a))
+                if(IsPointerTo<ForAllStatement>(b) && IsPointerTo<TileStatement>(a))
                 {
                     return false;
                 }
@@ -141,7 +141,7 @@ namespace tiler
             stream << endil;
             stream << *statement;
 
-            if(IsPointerTo<LoopStatement>(statement))
+            if(IsPointerTo<ForAllStatement>(statement))
             {
                 stream << endil;
                 stream << "{";
@@ -153,7 +153,7 @@ namespace tiler
         std::reverse(_statements.begin(), _statements.end());
         for(const auto& statement : _statements)
         {
-            if(IsPointerTo<LoopStatement>(statement))
+            if(IsPointerTo<ForAllStatement>(statement))
             {
                 DecreaseIndent();
                 stream << endil << "}";
@@ -165,17 +165,17 @@ namespace tiler
         stream << endil << "}";
     }
 
-    NestMutatorBase::NestMutatorBase(std::shared_ptr<Nest> nest) : _nest(nest) 
+    NestStatementAppender::NestStatementAppender(std::shared_ptr<Nest> nest) : _nest(nest) 
     {}
 
-    NestMutatorBase NestMutatorBase::Using(Variable matrixVariable, MatrixLayout matrixLayout, float* data)
+    NestStatementAppender NestStatementAppender::Using(Variable matrixVariable, MatrixLayout matrixLayout, bool isOutput, float* data)
     {
-        auto statement = std::make_shared<UsingStatement>(matrixVariable, matrixLayout, data);
+        auto statement = std::make_shared<UsingStatement>(matrixVariable, matrixLayout, isOutput, data);
         _nest->AddStatement(statement);
         return *this;
     }
 
-    NestMutatorBase NestMutatorBase::Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel)
+    NestStatementAppender NestStatementAppender::Kernel(const Variable& matrixAVariable, const Variable& matrixBVariable, const Variable& matrixCVariable, KernelStatement::KernelType kernel)
     {
         auto matrixAStatement = _nest->FindStatementByTypeAndVariable<MatrixStatement>(matrixAVariable);
         auto matrixBStatement = _nest->FindStatementByTypeAndVariable<MatrixStatement>(matrixBVariable);
@@ -186,28 +186,28 @@ namespace tiler
         return *this; 
     }
 
-    void NestMutatorBase::Print(std::ostream& stream) const
+    void NestStatementAppender::Print(std::ostream& stream) const
     { 
         return _nest->Print(stream); 
     }
 
-    double LoopMutator::_loopCounter = 0;
+    double ForAllStatementModifier::_loopCounter = 0;
 
-    LoopMutator::LoopMutator(std::shared_ptr<Nest> nest, std::shared_ptr<LoopStatement> loop) : NestMutatorBase(nest), _loop(loop) 
+    ForAllStatementModifier::ForAllStatementModifier(std::shared_ptr<Nest> nest, std::shared_ptr<ForAllStatement> loop) : NestStatementAppender(nest), _loop(loop) 
     {
         _loop->SetPosition(_loopCounter++);
     }
 
-    LoopMutator LoopMutator::Position(double Position) 
+    ForAllStatementModifier ForAllStatementModifier::Position(double Position) 
     { 
         _loop->SetPosition(Position); 
         return *this; 
     }
 
-    TileMutator::TileMutator(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile) : NestMutatorBase(nest), _tile(tile) 
+    TileStatementModifier::TileStatementModifier(std::shared_ptr<Nest> nest, std::shared_ptr<TileStatement> tile) : NestStatementAppender(nest), _tile(tile) 
     {}
 
-    NestMutatorBase TileMutator::Cache(MatrixOrder order)
+    NestStatementAppender TileStatementModifier::Cache(MatrixOrder order)
     {
         _tile->SetCache(true);
         MatrixLayout oldLayout = _tile->GetLayout();
@@ -215,15 +215,15 @@ namespace tiler
         _tile->GetLayout() = newLayout;
 
         // add cache allocation
-        auto statement = std::make_shared<UsingStatement>(_tile->GetVariable(), newLayout, nullptr);
+        auto statement = std::make_shared<UsingStatement>(_tile->GetVariable(), newLayout, false, nullptr);
         _nest->AddStatement(statement);
 
-        return NestMutatorBase(_nest);
+        return NestStatementAppender(_nest);
     }
 
-    NestMutatorBase MakeNest()
+    NestStatementAppender MakeNest()
     {
         auto nest = std::make_shared<Nest>();
-        return NestMutatorBase(nest);
+        return NestStatementAppender(nest);
     }
 }
