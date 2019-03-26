@@ -13,8 +13,8 @@
 
 namespace tiler
 {
-    const char* copyFunction = R"AW(
-    void Copy(float* target, const float* source, int size, int count, int targetSkip, int sourceSkip)
+    const char* copyFunction = 
+    R"AW(    void Copy(float* target, const float* source, int size, int count, int targetSkip, int sourceSkip)
     {
         for(int i=0; i<count; ++i)
         {
@@ -25,8 +25,8 @@ namespace tiler
     }
     )AW";
 
-    const char* copyTransposeFunction = R"AW(
-    void CopyTranspose(float* target, const float* source, int size, int count, int targetSkip, int sourceSkip)
+    const char* copyTransposeFunction = 
+    R"AW(    void CopyTranspose(float* target, const float* source, int size, int count, int targetSkip, int sourceSkip)
     {
         for(int i=0; i<count; ++i)
         {

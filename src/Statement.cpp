@@ -70,7 +70,7 @@ namespace tiler
             stream << "}";
         }
 
-        PrintFormated(stream, ";    // Using statement, rows:%, cols:%, order:%, output:%\n\n", layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column", IsOutput() ? "true" : "false");
+        PrintFormated(stream, ";    // Using statement, rows:%, cols:%, order:%, output:%\n", layout.NumRows(), layout.NumColumns(), (layout.GetOrder() == MatrixOrder::rowMajor) ? "row" : "column", IsOutput() ? "true" : "false");
     }
 
     TileStatement::TileStatement(const Variable& tileVariable, MatrixLayout tileLayout, MatrixStatementPtr matrixStatement, StatementPtr topStatement, StatementPtr leftStatement)
@@ -139,12 +139,13 @@ namespace tiler
 
             if(tileLayout.GetOrder() == matrixLayout.GetOrder())
             {
-                PrintFormated(stream, "Copy(%, %, %, %, %, %);\n", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
+                PrintFormated(stream, "Copy(%, %, %, %, %, %);", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
             }
             else
             {
-                PrintFormated(stream, "CopyTranspose(%, %, %, %, %, %);\n", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
+                PrintFormated(stream, "CopyTranspose(%, %, %, %, %, %);", source, name, tileLayout.GetMinorSize(), tileLayout.GetMajorSize(), matrixLayout.GetLeadingDimensionSize(), tileLayout.GetLeadingDimensionSize());
             }
+            stream << "    // copy output value back from cache\n";
         }
     }
 
