@@ -47,13 +47,13 @@ int main(int argc, char** argv)
         .Using(B, {6, 4, MatrixOrder::rowMajor}, false, v.data())
         .Using(C, {4, 4, MatrixOrder::rowMajor}, true, z.data())
 
-        .ForAll(i, 0, 4, 2)
+        .ForAll(i, 0, 4, 2)                                 .
             .ForAll(j, 0, 4, 2)
-                .ForAll(k, 0, 6, 2)                         .Position(0.5)
-                    .Tile(AA, A, i, k, 2, 2)                .Cache(MatrixOrder::columnMajor)  
-                    .Tile(BB, B, k, j, 2, 2)                .Cache(MatrixOrder::rowMajor)
-                    .Tile(CC, C, i, j, 2, 2)                .Cache(MatrixOrder::rowMajor)
-                    .Kernel(AA, BB, CC, MMKernel222)
+                .ForAll(k, 0, 6, 2)                         << Position(1)
+                    .Tile(AA, A, i, k, 2, 2)                << Cache(MatrixOrder::columnMajor)  
+                    .Tile(BB, B, k, j, 2, 2)                << Cache(MatrixOrder::rowMajor)
+                    .Tile(CC, C, i, j, 2, 2)                
+                    .Kernel(AA, BB, CC, MMKernel222)        .defaultToOther
 
         .Print(std::cout);
     }
